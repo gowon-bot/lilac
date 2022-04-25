@@ -45,7 +45,10 @@ defmodule Lilac.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:absinthe, "~> 1.6"},
-      {:absinthe_plug, "~> 1.5"}
+      {:absinthe_plug, "~> 1.5"},
+      {:httpoison, "~> 1.8"},
+      {:poison, "~> 5.0"},
+      {:timex, "~> 3.7"}
     ]
   end
 

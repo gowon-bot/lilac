@@ -16,9 +16,14 @@ defmodule Lilac.Application do
       {Phoenix.PubSub, name: Lilac.PubSub},
       # Start the Endpoint (http/https)
       LilacWeb.Endpoint
-      # Start a worker by calling: Lilac.Worker.start_link(arg)
-      # {Lilac.Worker, arg}
     ]
+
+    # Start the indexing server
+    {:ok, _} = GenServer.start_link(Lilac.Servers.Indexing, :ok, name: IndexingServer)
+    # Start the conversion server
+    {:ok, _} = GenServer.start_link(Lilac.Servers.Converting, :ok, name: ConvertingServer)
+
+    LilacWeb.Initializer.initialize()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
