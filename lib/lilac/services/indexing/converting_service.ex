@@ -1,12 +1,15 @@
 defmodule Lilac.Services.Converting do
-  import Ecto.Query, only: [from: 2]
+  import Ecto.Query, only: [from: 1, from: 2]
 
-  # Entities
-  alias Lilac.{Artist}
   alias Lilac.ConversionMap
   alias Lilac.Database.InsertHelpers
 
-  @spec generate_artist_map([%Artist{}]) :: map
+  # Entities
+  alias Lilac.{Artist, Album}
+
+  # Artists
+
+  @spec generate_artist_map([String.t()]) :: map
   def generate_artist_map(artists) do
     artists = Enum.uniq(artists)
 
@@ -40,6 +43,65 @@ defmodule Lilac.Services.Converting do
       artists,
       map,
       fn artist, acc -> ConversionMap.add(acc, artist.name, artist.id) end
+    )
+  end
+
+  # Albums
+
+  @spec generate_album_map(map, [Album.raw()]) :: map
+  def generate_album_map(artist_map, albums) do
+    albums =
+      Enum.uniq(albums)
+      |> Enum.map(fn album ->
+        album
+        |> Map.put(:artist_id, ConversionMap.get(artist_map, album.artist))
+        |> Map.delete(:artist)
+      end)
+
+    albums =
+      from(l in Album)
+      |> Lilac.Database.CustomFunctions.albums_in(albums)
+      |> Lilac.Repo.all()
+
+    add_albums_to_conversion_map(albums)
+  end
+
+  @spec create_missing_albums(map, map, [Album.raw()]) :: map
+  def create_missing_albums(artist_map, conversion_map, albums) do
+    albums =
+      albums
+      |> Enum.uniq()
+      |> Enum.filter(fn album ->
+        not ConversionMap.has_nested?(
+          conversion_map,
+          [ConversionMap.get(artist_map, album.artist), album.name]
+        )
+      end)
+
+    if length(albums) == 0 do
+      conversion_map
+    else
+      new_albums =
+        albums
+        |> Enum.map(fn album ->
+          %{name: album.name, artist_id: ConversionMap.get(artist_map, album.artist)}
+        end)
+        |> InsertHelpers.add_timestamps_to_many()
+
+      {_count, inserted_albums} = Lilac.Repo.insert_all(Album, new_albums, returning: true)
+
+      add_albums_to_conversion_map(inserted_albums, conversion_map)
+    end
+  end
+
+  @spec add_albums_to_conversion_map([%Album{}], map) :: map
+  defp add_albums_to_conversion_map(albums, map \\ %{}) do
+    Enum.reduce(
+      albums,
+      map,
+      fn album, acc ->
+        ConversionMap.add_nested(acc, [album.artist_id, album.name], album.id)
+      end
     )
   end
 end
