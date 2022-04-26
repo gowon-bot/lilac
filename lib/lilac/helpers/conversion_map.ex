@@ -1,12 +1,13 @@
-@doc """
-ConversionMap holds methods to interact with maps
-specialized for converting raw entities to ids
-
-eg. Converting {artist: "WJSN", name: "WJ Please?"}  ->  12467 (id)
-
-All keys are downcased, and nested entities can safely be accessed
-"""
 defmodule Lilac.ConversionMap do
+  @moduledoc """
+  ConversionMap holds methods to interact with maps
+  specialized for converting raw entities to ids
+
+  eg. Converting {artist: "WJSN", name: "WJ Please?"}  ->  12467 (id)
+
+  All keys are downcased, and nested entities can safely be accessed
+  """
+
   @type conversion_key :: String.t() | integer
 
   @spec add(map, conversion_key, integer) :: map
@@ -62,10 +63,10 @@ defmodule Lilac.ConversionMap do
 
   @spec clean_key(conversion_key) :: conversion_key
   defp clean_key(key) do
-    if is_bitstring(key) do
-      String.downcase(key)
-    else
-      key
+    cond do
+      is_nil(key) -> ""
+      is_bitstring(key) -> String.downcase(key)
+      true -> key
     end
   end
 

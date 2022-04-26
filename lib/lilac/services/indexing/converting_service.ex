@@ -5,7 +5,7 @@ defmodule Lilac.Services.Converting do
   alias Lilac.Database.InsertHelpers
 
   # Entities
-  alias Lilac.{Artist, Album}
+  alias Lilac.{Artist, Album, Track}
 
   # Artists
 
@@ -52,11 +52,7 @@ defmodule Lilac.Services.Converting do
   def generate_album_map(artist_map, albums) do
     albums =
       Enum.uniq(albums)
-      |> Enum.map(fn album ->
-        album
-        |> Map.put(:artist_id, ConversionMap.get(artist_map, album.artist))
-        |> Map.delete(:artist)
-      end)
+      |> Enum.map(fn album -> raw_album_to_queryable(album, artist_map) end)
 
     albums =
       from(l in Album)
@@ -102,6 +98,89 @@ defmodule Lilac.Services.Converting do
       fn album, acc ->
         ConversionMap.add_nested(acc, [album.artist_id, album.name], album.id)
       end
+    )
+  end
+
+  @spec raw_album_to_queryable(Album.raw(), map) :: map
+  defp raw_album_to_queryable(album, artist_map) do
+    album
+    |> Map.put(:artist_id, ConversionMap.get(artist_map, album.artist))
+    |> Map.delete(:artist)
+  end
+
+  # Tracks
+
+  @spec generate_track_map(map, map, [Track.raw()]) :: map
+  def generate_track_map(artist_map, album_map, tracks) do
+    tracks =
+      tracks
+      |> Enum.uniq()
+      |> Enum.map(fn track -> raw_track_to_queryable(track, artist_map, album_map) end)
+
+    tracks =
+      from(l in Track)
+      |> Lilac.Database.CustomFunctions.tracks_in(tracks)
+      |> Lilac.Repo.all()
+
+    add_tracks_to_conversion_map(tracks)
+  end
+
+  @spec create_missing_tracks(map, map, map, [Track.raw()]) :: map
+  def create_missing_tracks(artist_map, album_map, conversion_map, tracks) do
+    tracks =
+      tracks
+      |> Enum.uniq()
+      |> Enum.filter(fn track ->
+        is_track_unmapped?(track, artist_map, album_map, conversion_map)
+      end)
+
+    if length(tracks) == 0 do
+      conversion_map
+    else
+      new_tracks =
+        tracks
+        |> Enum.map(fn track -> raw_track_to_queryable(track, artist_map, album_map) end)
+        |> InsertHelpers.add_timestamps_to_many()
+
+      {_count, inserted_tracks} = Lilac.Repo.insert_all(Track, new_tracks, returning: true)
+
+      add_tracks_to_conversion_map(inserted_tracks, conversion_map)
+    end
+  end
+
+  @spec add_tracks_to_conversion_map([%Track{}], map) :: map
+  defp add_tracks_to_conversion_map(tracks, map \\ %{}) do
+    Enum.reduce(
+      tracks,
+      map,
+      fn track, acc ->
+        ConversionMap.add_nested(acc, [track.artist_id, track.album_id, track.name], track.id)
+      end
+    )
+  end
+
+  @spec raw_track_to_queryable(Track.raw(), map, map) :: map
+  defp raw_track_to_queryable(track, artist_map, album_map) do
+    artist_id = ConversionMap.get(artist_map, track.artist)
+
+    track
+    |> Map.put(:artist_id, artist_id)
+    |> Map.delete(:artist)
+    |> Map.put(:album_id, ConversionMap.get_nested(album_map, [artist_id, track.album]))
+    |> Map.delete(:album)
+  end
+
+  defp is_track_unmapped?(track, artist_map, album_map, conversion_map) do
+    artist_id = ConversionMap.get(artist_map, track.artist)
+    album_id = ConversionMap.get_nested(album_map, [artist_id, track.album])
+
+    not ConversionMap.has_nested?(
+      conversion_map,
+      [
+        artist_id,
+        album_id,
+        track.name
+      ]
     )
   end
 end

@@ -27,8 +27,8 @@ defmodule Lilac.Servers.Converting do
       |> Enum.filter(fn track -> not Map.has_key?(track, "@attr") end)
 
     artist_map = convert_artists(scrobbles)
-
-    _albums_map = convert_albums(artist_map, scrobbles)
+    album_map = convert_albums(artist_map, scrobbles)
+    _track_map = convert_tracks(artist_map, album_map, scrobbles)
 
     {:noreply, :ok}
   end
@@ -56,5 +56,20 @@ defmodule Lilac.Servers.Converting do
     album_map = Converting.generate_album_map(artist_map, albums)
 
     Converting.create_missing_albums(artist_map, album_map, albums)
+  end
+
+  @spec convert_tracks(map, map, [map]) :: map
+  defp convert_tracks(artist_map, album_map, scrobbles) do
+    tracks =
+      Enum.map(scrobbles, fn s ->
+        %{}
+        |> Map.put(:name, s["name"])
+        |> Map.put(:album, s["album"]["#text"])
+        |> Map.put(:artist, s["artist"]["#text"])
+      end)
+
+    track_map = Converting.generate_track_map(artist_map, album_map, tracks)
+
+    Converting.create_missing_tracks(artist_map, album_map, track_map, tracks)
   end
 end
