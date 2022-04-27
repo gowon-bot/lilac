@@ -3,7 +3,7 @@ defmodule Lilac.Repo.Migrations.AddAlbumsTable do
 
   def change do
     create table(:albums) do
-      add :name, :string
+      add :name, :citext
       add :artist_id, references(:artists)
 
       timestamps()

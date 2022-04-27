@@ -8,8 +8,11 @@ defmodule Lilac.Services.LastFM do
   end
 
   def recent_tracks(%Types.RecentTracksParams{} = params) do
-    LastFMAPI.get(
+    url =
       "method=user.getRecentTracks&user=#{params.username}&limit=#{params.limit}&page=#{params.page}"
-    )
+
+    url = if params.from != nil, do: url <> "&from=#{params.from}", else: url
+
+    LastFMAPI.get(url)
   end
 end

@@ -35,12 +35,12 @@ defmodule Lilac.ConversionMap do
     get_nested(map, keys) != nil
   end
 
-  @spec get(map, conversion_key) :: String.t()
+  @spec get(map, conversion_key) :: integer
   def get(map, key) do
     Map.get(map, clean_key(key))
   end
 
-  @spec get_nested(map, [conversion_key]) :: String.t()
+  @spec get_nested(map, [conversion_key]) :: integer
   def get_nested(map, keys) do
     # If any of the keys are nil, it doesn't exist
     if length(Enum.filter(keys, fn key -> key != nil end)) != length(keys) do

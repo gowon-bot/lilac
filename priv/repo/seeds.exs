@@ -10,14 +10,14 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-alias Lilac.{Artist, Album, Track}
-alias Lilac.Repo
+# alias Lilac.{Artist, Album, Track}
+# alias Lilac.Repo
 
-%Artist{name: "Red Velvet"} |> Repo.insert!()
-wjsn = %Artist{name: "WJSN"} |> Repo.insert!()
-jpegmafia = %Artist{name: "JPEGMAFIA"} |> Repo.insert!()
+# %Artist{name: "Red Velvet"} |> Repo.insert!()
+# wjsn = %Artist{name: "WJSN"} |> Repo.insert!()
+# jpegmafia = %Artist{name: "JPEGMAFIA"} |> Repo.insert!()
 
-wj_please = %Album{name: "WJ Please?", artist: wjsn} |> Repo.insert!()
-%Album{name: "All My Heroes Are Cornballs", artist: jpegmafia} |> Repo.insert!()
+# wj_please = %Album{name: "WJ Please?", artist: wjsn} |> Repo.insert!()
+# %Album{name: "All My Heroes Are Cornballs", artist: jpegmafia} |> Repo.insert!()
 
-%Track{name: "You Got", artist: wjsn, album: wj_please} |> Repo.insert!()
+# %Track{name: "You Got", artist: wjsn, album: wj_please} |> Repo.insert!()

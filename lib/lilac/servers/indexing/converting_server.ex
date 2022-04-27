@@ -2,6 +2,7 @@ defmodule Lilac.Servers.Converting do
   use GenServer
 
   alias Lilac.Services.Converting
+  alias Lilac.{ConversionMap, CountingMap}
 
   # Client API
 
@@ -28,7 +29,11 @@ defmodule Lilac.Servers.Converting do
 
     artist_map = convert_artists(scrobbles)
     album_map = convert_albums(artist_map, scrobbles)
-    _track_map = convert_tracks(artist_map, album_map, scrobbles)
+    track_map = convert_tracks(artist_map, album_map, scrobbles)
+
+    counting_maps = count(scrobbles, artist_map, album_map, track_map)
+
+    :ok = Lilac.Servers.Counting.upsert(CountingServer, %Lilac.User{id: 1}, counting_maps)
 
     {:noreply, :ok}
   end
@@ -36,7 +41,7 @@ defmodule Lilac.Servers.Converting do
   # Helpers
 
   @spec convert_artists([map]) :: map
-  defp convert_artists(scrobbles) do
+  def convert_artists(scrobbles) do
     artists = Enum.map(scrobbles, fn s -> s["artist"]["#text"] end)
 
     artist_map = Converting.generate_artist_map(artists)
@@ -45,7 +50,7 @@ defmodule Lilac.Servers.Converting do
   end
 
   @spec convert_albums(map, [map]) :: map
-  defp convert_albums(artist_map, scrobbles) do
+  def convert_albums(artist_map, scrobbles) do
     albums =
       Enum.map(scrobbles, fn s ->
         %{}
@@ -59,7 +64,7 @@ defmodule Lilac.Servers.Converting do
   end
 
   @spec convert_tracks(map, map, [map]) :: map
-  defp convert_tracks(artist_map, album_map, scrobbles) do
+  def convert_tracks(artist_map, album_map, scrobbles) do
     tracks =
       Enum.map(scrobbles, fn s ->
         %{}
@@ -71,5 +76,21 @@ defmodule Lilac.Servers.Converting do
     track_map = Converting.generate_track_map(artist_map, album_map, tracks)
 
     Converting.create_missing_tracks(artist_map, album_map, track_map, tracks)
+  end
+
+  @spec count([map], map, map, map) :: CountingMap.counting_maps()
+  def count(scrobbles, artist_map, album_map, track_map) do
+    counting_maps = %{artists: %{}, albums: %{}, tracks: %{}}
+
+    Enum.reduce(scrobbles, counting_maps, fn scrobble, counting_maps ->
+      artist_id = ConversionMap.get(artist_map, scrobble["artist"]["#text"])
+      album_id = ConversionMap.get_nested(album_map, [artist_id, scrobble["album"]["#text"]])
+      track_id = ConversionMap.get_nested(track_map, [artist_id, album_id, scrobble["name"]])
+
+      counting_maps
+      |> Map.put(:artists, CountingMap.increment(counting_maps.artists, artist_id))
+      |> Map.put(:albums, CountingMap.increment(counting_maps.albums, album_id))
+      |> Map.put(:tracks, CountingMap.increment(counting_maps.tracks, track_id))
+    end)
   end
 end

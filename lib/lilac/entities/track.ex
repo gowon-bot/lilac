@@ -17,6 +17,8 @@ defmodule Lilac.Track do
     belongs_to :artist, Lilac.Artist
     belongs_to :album, Lilac.Album
 
+    has_many :track_counts, Lilac.TrackCount
+
     timestamps()
   end
 end

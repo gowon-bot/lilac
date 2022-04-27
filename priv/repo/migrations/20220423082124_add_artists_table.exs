@@ -3,7 +3,7 @@ defmodule Lilac.Repo.Migrations.AddArtistsTable do
 
   def change do
     create table(:artists) do
-      add :name, :string
+      add :name, :citext
 
       timestamps()
     end

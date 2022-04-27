@@ -22,6 +22,8 @@ defmodule Lilac.Application do
     {:ok, _} = GenServer.start_link(Lilac.Servers.Indexing, :ok, name: IndexingServer)
     # Start the conversion server
     {:ok, _} = GenServer.start_link(Lilac.Servers.Converting, :ok, name: ConvertingServer)
+    # Start the counting server
+    {:ok, _} = GenServer.start_link(Lilac.Servers.Counting, :ok, name: CountingServer)
 
     LilacWeb.Initializer.initialize()
 
