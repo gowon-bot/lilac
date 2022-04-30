@@ -1,4 +1,4 @@
-defmodule Lilac.Services.Converting do
+defmodule Lilac.Converting do
   import Ecto.Query, only: [from: 1, from: 2]
 
   alias Lilac.ConversionMap

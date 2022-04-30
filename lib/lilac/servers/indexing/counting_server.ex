@@ -2,7 +2,7 @@ defmodule Lilac.Servers.Counting do
   use GenServer
 
   alias Lilac.CountingMap
-  alias Lilac.Services.Counting
+  alias Lilac.Counting
 
   # Client api
 

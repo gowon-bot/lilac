@@ -1,6 +1,8 @@
 defmodule Lilac.Artist do
   use Ecto.Schema
 
+  @timestamps_opts [type: :utc_datetime]
+
   schema "artists" do
     field :name, :string
 

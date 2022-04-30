@@ -1,6 +1,8 @@
 defmodule Lilac.Album do
   use Ecto.Schema
 
+  @timestamps_opts [type: :utc_datetime]
+
   @typedoc """
   Represents an album to be used in a select query
   """

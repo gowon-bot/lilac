@@ -1,4 +1,4 @@
-defmodule Lilac.Services.Counting do
+defmodule Lilac.Counting do
   import Ecto.Query, only: [from: 2]
   alias Ecto.Multi
 

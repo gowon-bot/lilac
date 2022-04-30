@@ -5,7 +5,7 @@ defmodule Lilac.Repo.Migrations.AddUserTable do
     create table(:users) do
       add :discord_id, :string
       add :username, :string
-      add :last_indexed, :naive_datetime_usec
+      add :last_indexed, :utc_datetime
       add :last_fm_session, :string, null: true
       add :privacy, :integer
 

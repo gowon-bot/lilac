@@ -1,6 +1,8 @@
 defmodule Lilac.Track do
   use Ecto.Schema
 
+  @timestamps_opts [type: :utc_datetime]
+
   @typedoc """
   Represents a track to be used in a select query
   """

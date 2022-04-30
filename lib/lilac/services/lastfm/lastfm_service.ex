@@ -1,18 +1,19 @@
-defmodule Lilac.Services.LastFM do
-  alias Lilac.Services.LastFMAPI
-  alias Lilac.Services.LastFMAPI.Types
+defmodule Lilac.LastFM do
+  alias Lilac.LastFM.API
+  alias Lilac.LastFM.API.Params
+  alias __MODULE__.Responses
 
   # Recent tracks
   def nowplaying(username) do
-    recent_tracks(%Types.RecentTracksParams{username: username, limit: 1})
+    recent_tracks(%Params.RecentTracks{username: username, limit: 1})
   end
 
-  def recent_tracks(%Types.RecentTracksParams{} = params) do
-    url =
-      "method=user.getRecentTracks&user=#{params.username}&limit=#{params.limit}&page=#{params.page}"
-
-    url = if params.from != nil, do: url <> "&from=#{params.from}", else: url
-
-    LastFMAPI.get(url)
+  @spec recent_tracks(Params.RecentTracks.t()) ::
+          {:ok, %Responses.RecentTracks{}} | {:error, struct}
+  def recent_tracks(%Params.RecentTracks{} = params) do
+    params
+    |> API.Params.build("user.getRecentTracks")
+    |> API.get()
+    |> API.handle_response()
   end
 end

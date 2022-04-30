@@ -1,31 +1,39 @@
-defmodule Lilac.Services.Indexing do
-  alias Lilac.Services.{LastFM, LastFMAPI}
+defmodule Lilac.Indexing do
+  import Ecto.Query, only: [from: 2]
 
-  @spec index(String.t(), number) :: no_return
-  def index(username, page \\ 1, retry \\ true) do
+  alias Lilac.LastFM
+
+  @spec index(%Lilac.User{}, number) :: no_return
+  def index(user, page \\ 1, retry \\ true) do
+    if page == 1, do: clear_data(user)
+
     IO.puts("Processing page #{page}...")
 
     recent_tracks =
-      LastFM.recent_tracks(%LastFMAPI.Types.RecentTracksParams{
-        username: username,
+      LastFM.recent_tracks(%LastFM.API.Params.RecentTracks{
+        username: Lilac.Requestable.from_user(user),
         page: page,
-        limit: 1000
+        limit: 500
       })
 
     case recent_tracks do
-      {:error, _} ->
-        index(username, page, false)
-
-      {:ok, %{body: %{"error" => _error}}} when retry == true ->
-        index(username, page, false)
+      {:error, _} when retry == true ->
+        index(user, page, false)
 
       {:ok, fetched_page} ->
-        Lilac.Servers.Converting.convert_page(ConvertingServer, fetched_page.body)
+        Lilac.Servers.Converting.convert_page(ConvertingServer, fetched_page, user)
 
-        total_pages =
-          fetched_page.body["recenttracks"]["@attr"]["totalPages"] |> String.to_integer()
-
-        unless page >= total_pages, do: index(username, page + 1)
+        unless page >= fetched_page.meta.total_pages, do: index(user, page + 1)
     end
+  end
+
+  @spec clear_data(%Lilac.User{}) :: no_return()
+  def clear_data(user) do
+    Enum.each(
+      [Lilac.Scrobble, Lilac.ArtistCount, Lilac.AlbumCount, Lilac.TrackCount],
+      fn elem ->
+        from(e in elem, where: e.user_id == ^user.id) |> Lilac.Repo.delete_all()
+      end
+    )
   end
 end

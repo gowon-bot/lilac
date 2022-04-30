@@ -3,12 +3,12 @@ defmodule Lilac.Servers.Indexing do
 
   # Client api
 
-  def index_user(pid, username) do
-    GenServer.cast(pid, {:index, username})
+  def index_user(pid, ambiguous_requestable) do
+    GenServer.cast(pid, {:index, ambiguous_requestable})
   end
 
-  def update_user(pid, username) do
-    GenServer.cast(pid, {:update, username})
+  def update_user(pid, ambiguous_requestable) do
+    GenServer.cast(pid, {:update, ambiguous_requestable})
   end
 
   # Server callbacks
@@ -23,16 +23,16 @@ defmodule Lilac.Servers.Indexing do
   end
 
   @impl true
-  def handle_cast({:index, username}, _state) do
-    IO.puts("Indexing #{username}")
+  def handle_cast({:index, ambiguous_requestable}, _state) do
+    IO.puts("Indexing #{Lilac.Requestable.from_ambiguous(ambiguous_requestable).username}")
 
-    {:noreply, username}
+    {:noreply, ambiguous_requestable}
   end
 
   @impl true
-  def handle_cast({:update, username}, _state) do
-    IO.puts("Indexing #{username}")
+  def handle_cast({:update, ambiguous_requestable}, _state) do
+    IO.puts("Updating #{Lilac.Requestable.from_ambiguous(ambiguous_requestable).username}")
 
-    {:noreply, username}
+    {:noreply, ambiguous_requestable}
   end
 end
