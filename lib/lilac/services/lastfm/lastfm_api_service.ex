@@ -22,10 +22,11 @@ defmodule Lilac.LastFM.API do
   def handle_response(response) do
     case response do
       {:error, error} ->
-        %Errors.ConnectionError{
-          status_code: if(Map.has_key?(error, :status_code), do: error.status_code, else: nil),
-          reason: if(Map.has_key?(error, :reason), do: error.reason, else: nil)
-        }
+        {:error,
+         %Errors.ConnectionError{
+           status_code: if(Map.has_key?(error, :status_code), do: error.status_code, else: nil),
+           reason: if(Map.has_key?(error, :reason), do: error.reason, else: nil)
+         }}
 
       {:ok, %{body: body}} ->
         if Map.has_key?(body, "error"),

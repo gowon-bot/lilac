@@ -1,6 +1,4 @@
 defmodule Lilac.LastFM.API.Params do
-  alias Lilac.Requestable
-
   @spec build(struct, binary) :: binary
   def build(params, method) do
     params
@@ -14,13 +12,13 @@ defmodule Lilac.LastFM.API.Params do
   defp add_defaults(params, method) do
     params
     |> Map.put(:format, "json")
-    |> Map.put(:api_key, Application.fetch_env!(:last_fm, :api_key))
+    |> Map.put(:api_key, Application.fetch_env!(:lilac, :last_fm_api_key))
     |> Map.put(:method, method)
   end
 
   @spec maybe_authed_params(map) :: map | keyword
   defp maybe_authed_params(params) do
-    if Map.has_key?(params, :sk) or Requestable.is_authed?(params.username) do
+    if Map.has_key?(params, :sk) or Lilac.Requestable.is_authed?(params.username) do
       handle_authed_params(params)
     else
       convert_username(params)
@@ -47,14 +45,14 @@ defmodule Lilac.LastFM.API.Params do
       |> Enum.filter(fn {key, _} -> key != :format end)
       |> Enum.reduce("", fn {key, value}, acc -> acc <> "#{key}#{value}" end)
 
-    :crypto.hash(:md5, signature <> Application.fetch_env!(:last_fm, :api_secret))
+    :crypto.hash(:md5, signature <> Application.fetch_env!(:lilac, :last_fm_api_secret))
     |> Base.encode16(case: :lower)
   end
 
   @spec convert_username(map) :: map
   defp convert_username(params) do
     if Map.has_key?(params, :username) do
-      Map.put(params, :username, Requestable.from_ambiguous(params.username).username)
+      Map.put(params, :username, Lilac.Requestable.from_ambiguous(params.username).username)
     else
       params
     end

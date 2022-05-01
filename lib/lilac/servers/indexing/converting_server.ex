@@ -25,14 +25,18 @@ defmodule Lilac.Servers.Converting do
   end
 
   @impl true
+  @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), %Lilac.User{}}}, term) ::
+          {:noreply, :ok}
   def handle_cast({:convert_page, {page, user}}, _state) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
     page_number = page.meta.page
 
     IO.puts("Converting artists for page #{page_number}")
     artist_map = convert_artists(scrobbles)
+
     IO.puts("Converting albums for page #{page_number}")
     album_map = convert_albums(artist_map, scrobbles)
+
     IO.puts("Converting tracks for page #{page_number}")
     track_map = convert_tracks(artist_map, album_map, scrobbles)
 
