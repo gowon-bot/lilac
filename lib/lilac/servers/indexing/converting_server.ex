@@ -96,16 +96,19 @@ defmodule Lilac.Servers.Converting do
   def count(scrobbles, artist_map, album_map, track_map) do
     counting_maps = %{artists: %{}, albums: %{}, tracks: %{}}
 
-    Enum.reduce(scrobbles, counting_maps, fn scrobble, counting_maps ->
-      artist_id = ConversionMap.get(artist_map, scrobble.artist)
-      album_id = ConversionMap.get_nested(album_map, [artist_id, scrobble.album])
-      track_id = ConversionMap.get_nested(track_map, [artist_id, album_id, scrobble.name])
+    maps =
+      Enum.reduce(scrobbles, counting_maps, fn scrobble, counting_maps ->
+        artist_id = ConversionMap.get(artist_map, scrobble.artist)
+        album_id = ConversionMap.get_nested(album_map, [artist_id, scrobble.album])
+        track_id = ConversionMap.get_nested(track_map, [artist_id, album_id, scrobble.name])
 
-      counting_maps
-      |> Map.put(:artists, CountingMap.increment(counting_maps.artists, artist_id))
-      |> Map.put(:albums, CountingMap.increment(counting_maps.albums, album_id))
-      |> Map.put(:tracks, CountingMap.increment(counting_maps.tracks, track_id))
-    end)
+        counting_maps
+        |> Map.put(:artists, CountingMap.increment(counting_maps.artists, artist_id))
+        |> Map.put(:albums, CountingMap.increment(counting_maps.albums, album_id))
+        |> Map.put(:tracks, CountingMap.increment(counting_maps.tracks, track_id))
+      end)
+
+    maps
   end
 
   @spec insert_scrobbles(scrobbles_type, map, map, map, %Lilac.User{}) :: no_return()

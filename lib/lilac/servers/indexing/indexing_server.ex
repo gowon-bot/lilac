@@ -7,7 +7,6 @@ defmodule Lilac.Servers.Indexing do
     GenServer.cast(pid, {:index, user})
   end
 
-  @spec update_user(atom | pid | {atom, any} | {:via, atom, any}, any) :: :ok
   def update_user(pid, user) do
     GenServer.cast(pid, {:update, user})
   end
@@ -30,6 +29,17 @@ defmodule Lilac.Servers.Indexing do
     {:ok, converting_pid} = GenServer.start_link(Lilac.Servers.Converting, :ok)
 
     Lilac.Indexing.index(converting_pid, user)
+
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_cast({:update, user}, _state) do
+    IO.puts("Updating #{inspect(user)}")
+
+    {:ok, converting_pid} = GenServer.start_link(Lilac.Servers.Converting, :ok)
+
+    Lilac.Indexing.update(converting_pid, user)
 
     {:noreply, nil}
   end

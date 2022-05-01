@@ -8,23 +8,57 @@ defmodule Lilac.Indexing do
   def index(converting_pid, user) do
     clear_data(user)
 
-    page = fetch_page(user, 1)
+    convert_pages(converting_pid, user, %Params.RecentTracks{
+      username: Lilac.Requestable.from_user(user),
+      limit: 500
+    })
+  end
+
+  @spec update(pid, %Lilac.User{}) :: no_return
+  def update(converting_pid, user) do
+    if user.last_indexed == nil do
+      index(converting_pid, user)
+    else
+      convert_pages(converting_pid, user, %Params.RecentTracks{
+        username: Lilac.Requestable.from_user(user),
+        limit: 500,
+        from: DateTime.to_unix(user.last_indexed) + 1
+      })
+    end
+  end
+
+  @spec convert_pages(pid, %Lilac.User{}, %Params.RecentTracks{}) :: no_return()
+  defp convert_pages(converting_pid, user, params) do
+    page = fetch_page(user, %{params | page: 1})
 
     total_pages = page.meta.total_pages
 
-    Lilac.Parallel.map(
-      2..total_pages,
-      fn page_number ->
-        page = fetch_page(user, page_number)
+    first_scrobble =
+      if Enum.at(page.tracks, 0).is_now_playing,
+        do: Enum.at(page.tracks, 1),
+        else: Enum.at(page.tracks, 0)
 
-        Lilac.Servers.Converting.convert_page(converting_pid, page, user)
+    user =
+      Ecto.Changeset.change(user, last_indexed: first_scrobble.scrobbled_at)
+      |> Lilac.Repo.update!()
+
+    Lilac.Parallel.map(
+      1..total_pages,
+      fn page_number ->
+        page = fetch_page(user, %{params | page: page_number})
+
+        Lilac.Servers.Converting.convert_page(
+          converting_pid,
+          page,
+          user
+        )
       end,
       size: 5
     )
   end
 
   @spec clear_data(%Lilac.User{}) :: no_return()
-  def clear_data(user) do
+  defp clear_data(user) do
     Enum.each(
       [Lilac.Scrobble, Lilac.ArtistCount, Lilac.AlbumCount, Lilac.TrackCount],
       fn elem ->
@@ -33,21 +67,16 @@ defmodule Lilac.Indexing do
     )
   end
 
-  @spec fetch_page(%Lilac.User{}, integer, boolean) :: %LastFM.Responses.RecentTracks{}
-  defp fetch_page(user, page, retry \\ true) do
-    params = %Params.RecentTracks{
-      username: Lilac.Requestable.from_user(user),
-      page: page,
-      limit: 500
-    }
-
+  @spec fetch_page(%Lilac.User{}, %Params.RecentTracks{}, boolean) ::
+          %LastFM.Responses.RecentTracks{}
+  defp fetch_page(user, params, retry \\ true) do
     recent_tracks = LastFM.recent_tracks(params)
 
-    IO.puts("Fetched page #{page}...")
+    IO.puts("Fetched page #{params.page}...")
 
     case recent_tracks do
       {:error, _} when retry == true ->
-        fetch_page(user, page, false)
+        fetch_page(user, params, false)
 
       {:error, error} ->
         error
