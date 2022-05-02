@@ -20,36 +20,35 @@ defmodule Lilac.Servers.Converting do
   end
 
   @impl true
-  def init(:ok) do
-    {:ok, %{}}
+  @spec init(:indexing | :updating) :: {:ok, map}
+  def init(action) do
+    {:ok, %{pages: 0, last_scrobble: nil, action: action}}
   end
 
   @impl true
   @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), %Lilac.User{}}}, term) ::
           {:noreply, :ok}
-  def handle_cast({:convert_page, {page, user}}, _state) do
+  def handle_cast({:convert_page, {page, user}}, state) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
     page_number = page.meta.page
 
-    IO.puts("Converting artists for page #{page_number}")
     artist_map = convert_artists(scrobbles)
 
-    IO.puts("Converting albums for page #{page_number}")
     album_map = convert_albums(artist_map, scrobbles)
 
-    IO.puts("Converting tracks for page #{page_number}")
     track_map = convert_tracks(artist_map, album_map, scrobbles)
 
-    IO.puts("Counting for page #{page_number}")
     counting_maps = count(scrobbles, artist_map, album_map, track_map)
 
-    IO.puts("Upserting counts for page #{page_number}")
     :ok = Lilac.Servers.Counting.upsert(CountingServer, user, counting_maps)
 
-    IO.puts("Inserting scrobbles for page #{page_number}")
     insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
 
-    {:noreply, :ok}
+    state = %{state | pages: state.pages + 1, last_scrobble: List.last(scrobbles)}
+
+    notify_subscribers(page, user, state)
+
+    {:noreply, state}
   end
 
   # Helpers
@@ -129,5 +128,19 @@ defmodule Lilac.Servers.Converting do
       end)
 
     Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
+  end
+
+  @spec notify_subscribers(Responses.RecentTracks.t(), %Lilac.User{}, %{pages: integer}) ::
+          no_return
+  defp notify_subscribers(page, user, %{pages: pages, action: action}) do
+    Absinthe.Subscription.publish(
+      LilacWeb.Endpoint,
+      %{
+        page: pages,
+        total_pages: page.meta.total_pages,
+        action: action
+      },
+      index: "#{user.id}"
+    )
   end
 end

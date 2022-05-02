@@ -1,7 +1,7 @@
 defmodule LilacWeb.Schema do
   use Absinthe.Schema
 
-  import_types(LilacWeb.Schema.MusicEntitiesTypes)
+  import_types(LilacWeb.Schema.Types)
 
   alias LilacWeb.Resolvers
 
@@ -24,15 +24,27 @@ defmodule LilacWeb.Schema do
 
   mutation do
     field :index, :string do
-      arg(:username, :string)
+      arg(:user, :user_input)
 
       resolve(&Resolvers.User.index/3)
     end
 
     field :update, :string do
-      arg(:username, :string)
+      arg(:user, :user_input)
 
-      resolve(&Resolvers.User.index/3)
+      resolve(&Resolvers.User.update/3)
+    end
+  end
+
+  subscription do
+    field :index, :indexing_progress do
+      arg(:user, non_null(:user_input))
+
+      config(fn args, _ ->
+        {:ok, topic: "#{args.user.id}"}
+      end)
+
+      resolve(fn progress, _, _ -> {:ok, progress} end)
     end
   end
 end

@@ -8,7 +8,9 @@ defmodule LilacWeb.Router do
   scope "/" do
     pipe_through :api
 
-    forward "/graphiql", Absinthe.Plug.GraphiQL, schema: LilacWeb.Schema
+    forward "/graphiql", Absinthe.Plug.GraphiQL,
+      schema: LilacWeb.Schema,
+      socket: LilacWeb.UserSocket
   end
 
   # Enables LiveDashboard only for development

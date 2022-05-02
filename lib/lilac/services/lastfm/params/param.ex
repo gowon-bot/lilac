@@ -1,3 +1,4 @@
+# Dialyzer glitches out when this file is called "params.ex"
 defmodule Lilac.LastFM.API.Params do
   @spec build(struct, binary) :: binary
   def build(params, method) do

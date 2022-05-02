@@ -72,8 +72,6 @@ defmodule Lilac.Indexing do
   defp fetch_page(user, params, retry \\ true) do
     recent_tracks = LastFM.recent_tracks(params)
 
-    IO.puts("Fetched page #{params.page}...")
-
     case recent_tracks do
       {:error, _} when retry == true ->
         fetch_page(user, params, false)

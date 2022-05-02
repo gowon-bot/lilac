@@ -1,5 +1,6 @@
 defmodule LilacWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :lilac
+  use Absinthe.Phoenix.Endpoint
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -11,6 +12,7 @@ defmodule LilacWeb.Endpoint do
   ]
 
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
+  socket "/socket", LilacWeb.UserSocket, websocket: true
 
   # Serve at "/" the static files from "priv/static" directory.
   #
