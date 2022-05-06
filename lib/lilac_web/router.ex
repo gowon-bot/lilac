@@ -11,6 +11,8 @@ defmodule LilacWeb.Router do
     forward "/graphiql", Absinthe.Plug.GraphiQL,
       schema: LilacWeb.Schema,
       socket: LilacWeb.UserSocket
+
+    forward "/graphql", Absinthe.Plug, schema: LilacWeb.Schema, socket: LilacWeb.UserSocket
   end
 
   # Enables LiveDashboard only for development

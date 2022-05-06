@@ -30,7 +30,6 @@ defmodule Lilac.Servers.Converting do
           {:noreply, :ok}
   def handle_cast({:convert_page, {page, user}}, state) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
-    page_number = page.meta.page
 
     artist_map = convert_artists(scrobbles)
 
@@ -130,9 +129,9 @@ defmodule Lilac.Servers.Converting do
     Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
   end
 
-  @spec notify_subscribers(Responses.RecentTracks.t(), %Lilac.User{}, %{pages: integer}) ::
+  @spec notify_subscribers(Responses.RecentTracks.t(), %Lilac.User{}, map) ::
           no_return
-  defp notify_subscribers(page, user, %{pages: pages, action: action}) do
+  def notify_subscribers(page, user, %{pages: pages, action: action}) do
     Absinthe.Subscription.publish(
       LilacWeb.Endpoint,
       %{

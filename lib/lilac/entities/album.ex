@@ -19,7 +19,5 @@ defmodule Lilac.Album do
 
     has_many :tracks, Lilac.Track
     has_many :album_counts, Lilac.AlbumCount
-
-    timestamps()
   end
 end

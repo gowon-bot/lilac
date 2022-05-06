@@ -63,11 +63,7 @@ defmodule Lilac.LastFM.Responses.RecentTracks do
       },
       tracks:
         Enum.map(convert_list(map["recenttracks"]["track"]), fn track ->
-          is_now_playing =
-            if(Map.has_key?(track, "@attr"),
-              do: convert_boolean(track["@attr"]["nowplaying"]),
-              else: false
-            )
+          is_now_playing = is_now_playing?(track)
 
           %__MODULE__.RecentTrack{
             artist: track["artist"]["#text"],
@@ -88,5 +84,18 @@ defmodule Lilac.LastFM.Responses.RecentTracks do
           }
         end)
     }
+  end
+
+  defp is_now_playing?(track) do
+    if is_map(track) do
+      if(Map.has_key?(track, "@attr"),
+        do: convert_boolean(track["@attr"]["nowplaying"]),
+        else: false
+      )
+    else
+      # For some reason this can be a tuple?
+      # ???
+      Enum.at(track, 0) == "@attr"
+    end
   end
 end

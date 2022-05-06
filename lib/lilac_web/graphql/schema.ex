@@ -41,7 +41,9 @@ defmodule LilacWeb.Schema do
       arg(:user, non_null(:user_input))
 
       config(fn args, _ ->
-        {:ok, topic: "#{args.user.id}"}
+        user = Lilac.Repo.get_by!(Lilac.User, args.user)
+
+        {:ok, topic: "#{user.id}"}
       end)
 
       resolve(fn progress, _, _ -> {:ok, progress} end)

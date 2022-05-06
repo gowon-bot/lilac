@@ -2,7 +2,6 @@ defmodule Lilac.Converting do
   import Ecto.Query, only: [from: 1, from: 2]
 
   alias Lilac.ConversionMap
-  alias Lilac.Database.InsertHelpers
 
   # Entities
   alias Lilac.{Artist, Album, Track}
@@ -27,9 +26,7 @@ defmodule Lilac.Converting do
     if length(artists) == 0 do
       conversion_map
     else
-      new_artists =
-        Enum.map(artists, fn a -> %{name: a} end)
-        |> InsertHelpers.add_timestamps_to_many()
+      new_artists = Enum.map(artists, fn a -> %{name: a} end)
 
       {_count, inserted_artists} = Lilac.Repo.insert_all(Artist, new_artists, returning: true)
 
@@ -82,7 +79,6 @@ defmodule Lilac.Converting do
         |> Enum.map(fn album ->
           %{name: album.name, artist_id: ConversionMap.get(artist_map, album.artist)}
         end)
-        |> InsertHelpers.add_timestamps_to_many()
 
       {_count, inserted_albums} = Lilac.Repo.insert_all(Album, new_albums, returning: true)
 
@@ -140,7 +136,6 @@ defmodule Lilac.Converting do
       new_tracks =
         tracks
         |> Enum.map(fn track -> raw_track_to_queryable(track, artist_map, album_map) end)
-        |> InsertHelpers.add_timestamps_to_many()
 
       {_count, inserted_tracks} = Lilac.Repo.insert_all(Track, new_tracks, returning: true)
 

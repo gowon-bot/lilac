@@ -27,5 +27,6 @@ defmodule LilacWeb.Schema.Types do
   input_object :user_input do
     field :id, :id
     field :username, :string
+    field :discord_id, :string
   end
 end
