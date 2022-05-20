@@ -16,7 +16,8 @@ defmodule Lilac.Application do
       {Phoenix.PubSub, name: Lilac.PubSub},
       # Start the Endpoint (http/https)
       LilacWeb.Endpoint,
-      {Absinthe.Subscription, LilacWeb.Endpoint}
+      {Absinthe.Subscription, LilacWeb.Endpoint},
+      {Lilac.ConvertingSupervisor, name: ConvertingSupervisor}
     ]
 
     # Start the indexing server

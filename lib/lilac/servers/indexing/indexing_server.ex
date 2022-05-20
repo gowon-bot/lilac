@@ -1,5 +1,5 @@
 defmodule Lilac.Servers.Indexing do
-  use GenServer
+  use GenServer, restart: :transient
 
   # Client api
 
@@ -25,7 +25,8 @@ defmodule Lilac.Servers.Indexing do
   @impl true
   @spec handle_cast({:index, %Lilac.User{}}, term) :: {:noreply, nil}
   def handle_cast({:index, user}, _state) do
-    {:ok, converting_pid} = GenServer.start_link(Lilac.Servers.Converting, :indexing)
+    {:ok, converting_pid} =
+      Supervisor.start_child(ConvertingSupervisor, {Lilac.Servers.Converting, :indexing})
 
     Lilac.Indexing.index(converting_pid, user)
 
@@ -34,7 +35,8 @@ defmodule Lilac.Servers.Indexing do
 
   @impl true
   def handle_cast({:update, user}, _state) do
-    {:ok, converting_pid} = GenServer.start_link(Lilac.Servers.Converting, :updating)
+    {:ok, converting_pid} =
+      Supervisor.start_child(ConvertingSupervisor, {Lilac.Servers.Converting, :updating})
 
     Lilac.Indexing.update(converting_pid, user)
 
