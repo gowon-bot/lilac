@@ -1,5 +1,5 @@
 defmodule Lilac.Servers.Counting do
-  use GenServer
+  use GenServer, restart: :transient
 
   alias Lilac.CountingMap
 

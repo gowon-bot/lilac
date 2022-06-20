@@ -3,7 +3,7 @@ defmodule Lilac.Servers.IndexingProgress do
     Keeps track of indexing progress, and notifies its caller when all pages have been processed.
     Also pushes progress updates to the websocket
   """
-  use GenServer
+  use GenServer, restart: :transient
 
   # Client API
 

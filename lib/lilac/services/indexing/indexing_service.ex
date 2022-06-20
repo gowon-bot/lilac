@@ -80,14 +80,14 @@ defmodule Lilac.Indexing do
     )
   end
 
-  @spec fetch_page(%Lilac.User{}, %Params.RecentTracks{}, boolean) ::
+  @spec fetch_page(%Lilac.User{}, %Params.RecentTracks{}, integer) ::
           %LastFM.Responses.RecentTracks{}
-  defp fetch_page(user, params, retry \\ true) do
+  defp fetch_page(user, params, retries \\ 1) do
     recent_tracks = LastFM.recent_tracks(params)
 
     case recent_tracks do
-      {:error, _} when retry == true ->
-        fetch_page(user, params, false)
+      {:error, _} when retries <= 3 ->
+        fetch_page(user, params, retries + 1)
 
       {:error, error} ->
         error

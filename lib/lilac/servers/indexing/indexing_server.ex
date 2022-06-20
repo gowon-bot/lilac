@@ -72,7 +72,7 @@ defmodule Lilac.Servers.Indexing do
       {:ok, converting_pid} =
         Supervisor.start_child(
           ConvertingSupervisor,
-          create_converting_child_spec(action, user)
+          create_converting_child_spec(user)
         )
 
       {:ok, indexing_progress_pid} =
@@ -88,10 +88,10 @@ defmodule Lilac.Servers.Indexing do
     end
   end
 
-  @spec create_converting_child_spec(:indexing | :updating, %Lilac.User{}) ::
+  @spec create_converting_child_spec(%Lilac.User{}) ::
           :supervisor.child_spec()
-  defp create_converting_child_spec(action, user) do
-    Supervisor.child_spec({Lilac.Servers.Converting, action}, id: "#{user.id}-converting")
+  defp create_converting_child_spec(user) do
+    Supervisor.child_spec({Lilac.Servers.Converting, %{}}, id: "#{user.id}-converting")
   end
 
   @spec create_indexing_progress_child_spec(:indexing | :updating, %Lilac.User{}) ::

@@ -21,15 +21,15 @@ defmodule Lilac.Servers.Converting do
   end
 
   @impl true
-  @spec init(:indexing | :updating) :: {:ok, map}
-  def init(action) do
-    {:ok, %{pages: 0, last_scrobble: nil, action: action}}
+  @spec init(term) :: {:ok, map}
+  def init(_) do
+    {:ok, %{}}
   end
 
   @impl true
   @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), %Lilac.User{}, pid}}, term) ::
           {:noreply, :ok}
-  def handle_cast({:convert_page, {page, user, indexing_progress_pid}}, state) do
+  def handle_cast({:convert_page, {page, user, indexing_progress_pid}}, _state) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
     artist_map = convert_artists(scrobbles)
@@ -46,7 +46,7 @@ defmodule Lilac.Servers.Converting do
 
     Lilac.Servers.IndexingProgress.capture_progress(indexing_progress_pid, user, page)
 
-    {:noreply, state}
+    {:noreply, %{}}
   end
 
   # Helpers
@@ -126,19 +126,5 @@ defmodule Lilac.Servers.Converting do
       end)
 
     Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
-  end
-
-  @spec notify_subscribers(Responses.RecentTracks.t(), %Lilac.User{}, map) ::
-          no_return
-  def notify_subscribers(page, user, %{pages: pages, action: action}) do
-    Absinthe.Subscription.publish(
-      LilacWeb.Endpoint,
-      %{
-        page: pages,
-        total_pages: page.meta.total_pages,
-        action: action
-      },
-      index: "#{user.id}"
-    )
   end
 end
