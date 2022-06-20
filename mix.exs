@@ -49,7 +49,8 @@ defmodule Lilac.MixProject do
       {:httpoison, "~> 1.8"},
       {:poison, "~> 5.0"},
       {:timex, "~> 3.7"},
-      {:absinthe_phoenix, "~> 2.0.0"}
+      {:absinthe_phoenix, "~> 2.0.0"},
+      {:cors_plug, "~> 3.0"}
     ]
   end
 

@@ -4,31 +4,39 @@ defmodule Lilac.Indexing do
   alias Lilac.LastFM
   alias Lilac.LastFM.API.Params
 
-  @spec index(pid, %Lilac.User{}) :: no_return
-  def index(converting_pid, user) do
+  @spec index(%{converting: pid, indexing_progress: pid}, %Lilac.User{}) :: no_return
+  def index(pids, user) do
     clear_data(user)
 
-    convert_pages(converting_pid, user, %Params.RecentTracks{
+    convert_pages(pids, user, %Params.RecentTracks{
       username: Lilac.Requestable.from_user(user),
       limit: 500
     })
   end
 
-  @spec update(pid, %Lilac.User{}) :: no_return
-  def update(converting_pid, user) do
+  @spec update(%{converting: pid, indexing_progress: pid}, %Lilac.User{}) :: no_return
+  def update(pids, user) do
     if user.last_indexed == nil do
-      index(converting_pid, user)
+      index(pids, user)
     else
-      convert_pages(converting_pid, user, %Params.RecentTracks{
-        username: Lilac.Requestable.from_user(user),
-        limit: 500,
-        from: DateTime.to_unix(user.last_indexed) + 1
-      })
+      convert_pages(
+        pids,
+        user,
+        %Params.RecentTracks{
+          username: Lilac.Requestable.from_user(user),
+          limit: 500,
+          from: DateTime.to_unix(user.last_indexed) + 1
+        }
+      )
     end
   end
 
-  @spec convert_pages(pid, %Lilac.User{}, %Params.RecentTracks{}) :: no_return()
-  defp convert_pages(converting_pid, user, params) do
+  @spec convert_pages(
+          %{converting: pid, indexing_progress: pid},
+          %Lilac.User{},
+          %Params.RecentTracks{}
+        ) :: no_return()
+  defp convert_pages(pids, user, params) do
     page = fetch_page(user, %{params | page: 1})
 
     total_pages = page.meta.total_pages
@@ -42,15 +50,20 @@ defmodule Lilac.Indexing do
       Ecto.Changeset.change(user, last_indexed: first_scrobble.scrobbled_at)
       |> Lilac.Repo.update!()
 
+    Enum.each(1..total_pages, fn page_number ->
+      Lilac.Servers.IndexingProgress.add_page(pids.indexing_progress, page_number)
+    end)
+
     Lilac.Parallel.map(
       1..total_pages,
       fn page_number ->
         page = fetch_page(user, %{params | page: page_number})
 
         Lilac.Servers.Converting.convert_page(
-          converting_pid,
+          pids.converting,
           page,
-          user
+          user,
+          pids.indexing_progress
         )
       end,
       size: 5

@@ -6,6 +6,11 @@ defmodule LilacWeb.Schema do
   alias LilacWeb.Resolvers
 
   query do
+    # Misc
+    field :ping, :string do
+      resolve(&Resolvers.Misc.ping/3)
+    end
+
     # Music entities
     field :all_artists, non_null(list_of(non_null(:artist))) do
       resolve(&Resolvers.Artists.all_artists/3)

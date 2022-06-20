@@ -9,8 +9,9 @@ defmodule Lilac.Servers.Converting do
 
   # Client API
 
-  def convert_page(pid, page, user) do
-    GenServer.cast(pid, {:convert_page, {page, user}})
+  @spec convert_page(pid, %Responses.RecentTracks{}, %Lilac.User{}, pid) :: :ok
+  def convert_page(pid, page, user, indexing_progress_pid) do
+    GenServer.cast(pid, {:convert_page, {page, user, indexing_progress_pid}})
   end
 
   # Server callbacks
@@ -26,9 +27,9 @@ defmodule Lilac.Servers.Converting do
   end
 
   @impl true
-  @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), %Lilac.User{}}}, term) ::
+  @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), %Lilac.User{}, pid}}, term) ::
           {:noreply, :ok}
-  def handle_cast({:convert_page, {page, user}}, state) do
+  def handle_cast({:convert_page, {page, user, indexing_progress_pid}}, state) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
     artist_map = convert_artists(scrobbles)
@@ -43,9 +44,7 @@ defmodule Lilac.Servers.Converting do
 
     insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
 
-    state = %{state | pages: state.pages + 1, last_scrobble: List.last(scrobbles)}
-
-    notify_subscribers(page, user, state)
+    Lilac.Servers.IndexingProgress.capture_progress(indexing_progress_pid, user, page)
 
     {:noreply, state}
   end

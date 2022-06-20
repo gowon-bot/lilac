@@ -95,7 +95,7 @@ defmodule Lilac.LastFM.Responses.RecentTracks do
     else
       # For some reason this can be a tuple?
       # ???
-      Enum.at(track, 0) == "@attr"
+      Kernel.elem(track, 0) == "@attr"
     end
   end
 end

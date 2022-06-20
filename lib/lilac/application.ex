@@ -17,6 +17,8 @@ defmodule Lilac.Application do
       # Start the Endpoint (http/https)
       LilacWeb.Endpoint,
       {Absinthe.Subscription, LilacWeb.Endpoint},
+
+      # Supervisors
       {Lilac.ConvertingSupervisor, name: ConvertingSupervisor}
     ]
 
