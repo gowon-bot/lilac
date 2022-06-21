@@ -57,7 +57,9 @@ defmodule Lilac.Servers.Indexing do
           indexing_progress: pid
         }
   defp start_servers(action, user) do
-    if Enum.any?(Supervisor.which_children(ConvertingSupervisor)) do
+    if Enum.any?(Supervisor.which_children(ConvertingSupervisor), fn child ->
+         Kernel.elem(child, 0) |> String.starts_with?("#{user.id}")
+       end) do
       {:ok, converting_pid} =
         Supervisor.restart_child(ConvertingSupervisor, "#{user.id}-converting")
 
