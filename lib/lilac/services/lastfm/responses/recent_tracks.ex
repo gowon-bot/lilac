@@ -62,7 +62,11 @@ defmodule Lilac.LastFM.Responses.RecentTracks do
         username: attr["user"]
       },
       tracks:
-        Enum.map(convert_list(map["recenttracks"]["track"]), fn track ->
+        convert_list(map["recenttracks"]["track"])
+        # For some reason tracks can be a tuple randomly (with only an @attr property),
+        # this only happens with nowplaying tracks so shouldn't be an issue to just ignore them
+        |> Enum.filter(fn t -> !Kernel.is_tuple(t) end)
+        |> Enum.map(fn track ->
           is_now_playing = is_now_playing?(track)
 
           %__MODULE__.RecentTrack{
@@ -87,15 +91,9 @@ defmodule Lilac.LastFM.Responses.RecentTracks do
   end
 
   defp is_now_playing?(track) do
-    if is_map(track) do
-      if(Map.has_key?(track, "@attr"),
-        do: convert_boolean(track["@attr"]["nowplaying"]),
-        else: false
-      )
-    else
-      # For some reason this can be a tuple?
-      # ???
-      Kernel.elem(track, 0) == "@attr"
-    end
+    if(Map.has_key?(track, "@attr"),
+      do: convert_boolean(track["@attr"]["nowplaying"]),
+      else: false
+    )
   end
 end

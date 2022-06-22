@@ -1,14 +1,44 @@
 defmodule Lilac.Servers.Indexing do
   use GenServer, restart: :transient
 
+  alias Lilac.Servers.Concurrency
+
   # Client api
 
+  @spec index_user(pid | atom, %Lilac.User{}) :: {:error, String.t()} | {:ok, nil}
   def index_user(pid, user) do
-    GenServer.cast(pid, {:index, user})
+    case handle_concurrency(user.id) do
+      {:ok, _} ->
+        GenServer.cast(pid, {:index, user})
+        {:ok, nil}
+
+      error ->
+        error
+    end
   end
 
+  @spec update_user(pid | atom, %Lilac.User{}) :: {:error, String.t()} | {:ok, nil}
   def update_user(pid, user) do
-    :ok = GenServer.cast(pid, {:update, user})
+    case handle_concurrency(user.id) do
+      {:ok, _} ->
+        GenServer.cast(pid, {:update, user})
+        {:ok, nil}
+
+      error ->
+        error
+    end
+  end
+
+  @spec handle_concurrency(integer) :: {:ok, nil} | {:error, String.t()}
+  defp handle_concurrency(user_id) do
+    user_doing_action = Concurrency.is_doing_action?(ConcurrencyServer, :indexing, user_id)
+
+    if !user_doing_action do
+      Concurrency.register(ConcurrencyServer, :indexing, user_id)
+      {:ok, nil}
+    else
+      {:error, "User is already being indexed or updated!"}
+    end
   end
 
   # Server callbacks
@@ -46,10 +76,6 @@ defmodule Lilac.Servers.Indexing do
   def stop_servers(user) do
     Supervisor.terminate_child(ConvertingSupervisor, "#{user.id}-converting")
     Supervisor.terminate_child(ConvertingSupervisor, "#{user.id}-indexing-progress")
-
-    # idk how to really do this yet lol
-    # Supervisor.delete_child(ConvertingSupervisor, "#{user.id}-converting")
-    # Supervisor.delete_child(ConvertingSupervisor, "#{user.id}-indexing-progress")
   end
 
   @spec start_servers(:indexing | :updating, %Lilac.User{}) :: %{

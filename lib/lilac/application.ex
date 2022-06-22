@@ -26,6 +26,8 @@ defmodule Lilac.Application do
     {:ok, _} = GenServer.start_link(Lilac.Servers.Indexing, :ok, name: IndexingServer)
     # Start the counting server
     {:ok, _} = GenServer.start_link(Lilac.Servers.Counting, :ok, name: CountingServer)
+    # Start the concurrency server
+    {:ok, _} = GenServer.start_link(Lilac.Servers.Concurrency, :ok, name: ConcurrencyServer)
 
     LilacWeb.Initializer.initialize()
 

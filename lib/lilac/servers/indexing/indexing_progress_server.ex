@@ -5,6 +5,8 @@ defmodule Lilac.Servers.IndexingProgress do
   """
   use GenServer, restart: :transient
 
+  alias Lilac.Servers.Concurrency
+
   # Client API
 
   @spec capture_progress(atom | pid | {atom, any} | {:via, atom, any}, any, any) :: any
@@ -14,6 +16,12 @@ defmodule Lilac.Servers.IndexingProgress do
 
   def add_page(pid, page_number) do
     GenServer.call(pid, {:add_page, page_number})
+  end
+
+  @spec shutdown(%Lilac.User{}) :: no_return()
+  def shutdown(user) do
+    Concurrency.unregister(ConcurrencyServer, :indexing, user.id)
+    Lilac.Servers.Indexing.stop_servers(user)
   end
 
   # Server callbacks
@@ -51,7 +59,7 @@ defmodule Lilac.Servers.IndexingProgress do
     IO.puts("#{page_count}/#{page.meta.total_pages}")
 
     if page_count == page.meta.total_pages do
-      Lilac.Servers.Indexing.stop_servers(user)
+      shutdown(user)
 
       {:reply, :ok, %{pages: pages, action: action, page_count: page_count}}
     else

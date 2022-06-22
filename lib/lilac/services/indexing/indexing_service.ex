@@ -41,33 +41,37 @@ defmodule Lilac.Indexing do
 
     total_pages = page.meta.total_pages
 
-    first_scrobble =
-      if Enum.at(page.tracks, 0).is_now_playing,
-        do: Enum.at(page.tracks, 1),
-        else: Enum.at(page.tracks, 0)
+    if total_pages != 0 do
+      first_scrobble =
+        if Enum.at(page.tracks, 0).is_now_playing,
+          do: Enum.at(page.tracks, 1),
+          else: Enum.at(page.tracks, 0)
 
-    user =
-      Ecto.Changeset.change(user, last_indexed: first_scrobble.scrobbled_at)
-      |> Lilac.Repo.update!()
+      user =
+        Ecto.Changeset.change(user, last_indexed: first_scrobble.scrobbled_at)
+        |> Lilac.Repo.update!()
 
-    Enum.each(1..total_pages, fn page_number ->
-      Lilac.Servers.IndexingProgress.add_page(pids.indexing_progress, page_number)
-    end)
+      Enum.each(1..total_pages, fn page_number ->
+        Lilac.Servers.IndexingProgress.add_page(pids.indexing_progress, page_number)
+      end)
 
-    Lilac.Parallel.map(
-      1..total_pages,
-      fn page_number ->
-        page = fetch_page(user, %{params | page: page_number})
+      Lilac.Parallel.map(
+        1..total_pages,
+        fn page_number ->
+          page = fetch_page(user, %{params | page: page_number})
 
-        Lilac.Servers.Converting.convert_page(
-          pids.converting,
-          page,
-          user,
-          pids.indexing_progress
-        )
-      end,
-      size: 5
-    )
+          Lilac.Servers.Converting.convert_page(
+            pids.converting,
+            page,
+            user,
+            pids.indexing_progress
+          )
+        end,
+        size: 5
+      )
+    else
+      Lilac.Servers.IndexingProgress.shutdown(user)
+    end
   end
 
   @spec clear_data(%Lilac.User{}) :: no_return()
@@ -87,6 +91,8 @@ defmodule Lilac.Indexing do
 
     case recent_tracks do
       {:error, _} when retries <= 3 ->
+        # Wait 300ms before trying again
+        Process.sleep(300)
         fetch_page(user, params, retries + 1)
 
       {:error, error} ->
