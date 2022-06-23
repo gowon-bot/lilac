@@ -3,14 +3,17 @@ defmodule LilacWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+
+    plug LilacWeb.Plugs.Auth
+    plug LilacWeb.Plugs.Context
   end
 
   scope "/" do
-    pipe_through :api
-
     forward "/graphiql", Absinthe.Plug.GraphiQL,
       schema: LilacWeb.Schema,
       socket: LilacWeb.UserSocket
+
+    pipe_through :api
 
     forward "/graphql", Absinthe.Plug, schema: LilacWeb.Schema, socket: LilacWeb.UserSocket
   end

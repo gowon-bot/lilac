@@ -48,8 +48,6 @@ defmodule Lilac.Servers.IndexingProgress do
 
     update_subscription(action, page_count, page.meta.total_pages, user.id)
 
-    IO.puts("#{page_count}/#{page.meta.total_pages}")
-
     if page_count == page.meta.total_pages do
       shutdown(user)
 
