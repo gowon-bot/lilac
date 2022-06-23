@@ -46,15 +46,7 @@ defmodule Lilac.Servers.IndexingProgress do
 
     page_count = page_count + 1
 
-    Absinthe.Subscription.publish(
-      LilacWeb.Endpoint,
-      %{
-        page: page_count,
-        total_pages: page.meta.total_pages,
-        action: action
-      },
-      index: "#{user.id}"
-    )
+    update_subscription(action, page_count, page.meta.total_pages, user.id)
 
     IO.puts("#{page_count}/#{page.meta.total_pages}")
 
@@ -74,5 +66,18 @@ defmodule Lilac.Servers.IndexingProgress do
         page_count: page_count
       }) do
     {:reply, :ok, %{pages: pages ++ [page_number], action: action, page_count: page_count}}
+  end
+
+  @spec update_subscription(:indexing | :updating, integer, integer, integer) :: no_return
+  def update_subscription(action, page, total_pages, user_id) do
+    Absinthe.Subscription.publish(
+      LilacWeb.Endpoint,
+      %{
+        page: page,
+        total_pages: total_pages,
+        action: action
+      },
+      index: "#{user_id}"
+    )
   end
 end

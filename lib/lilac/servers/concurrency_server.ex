@@ -49,9 +49,6 @@ defmodule Lilac.Servers.Concurrency do
   @impl true
   @spec handle_call({:inquire, action(), integer}, term, map) :: {:reply, boolean, map}
   def handle_call({:inquire, action, user_id}, _from, state) do
-    IO.inspect(state)
-    IO.inspect(action)
-
     {:reply, !!Enum.find(Map.get(state, action), fn x -> x === user_id end), state}
   end
 end

@@ -70,6 +70,16 @@ defmodule Lilac.Indexing do
         size: 5
       )
     else
+      # Give the client a chance to form the subscription
+      Process.sleep(300)
+
+      Lilac.Servers.IndexingProgress.update_subscription(
+        if(is_nil(params.from), do: :indexing, else: :updating),
+        0,
+        0,
+        user.id
+      )
+
       Lilac.Servers.IndexingProgress.shutdown(user)
     end
   end
