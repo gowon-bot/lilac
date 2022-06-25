@@ -18,7 +18,9 @@ COPY . .
 # Compile
 RUN mix compile
 
-RUN MIX_ENV="prod"; export SECRET_KEY_BASE=$(mix phx.gen.secret)
+# After 5 years you still cannot set an env variable to the output of a command,
+# so I have to store it in bashrc...
+RUN /bin/bash -l -c 'echo export  > /etc/profile.d/docker_init.sh'
 
 EXPOSE 4000
-CMD ["mix", "phx.server"]
+CMD SECRET_KEY_BASE="$(mix phx.gen.secret)" mix phx.server
