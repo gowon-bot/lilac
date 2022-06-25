@@ -50,11 +50,9 @@ defmodule Lilac.Servers.IndexingProgress do
 
     if page_count == page.meta.total_pages do
       shutdown(user)
-
-      {:reply, :ok, %{pages: pages, action: action, page_count: page_count}}
-    else
-      {:reply, :ok, %{pages: pages, action: action, page_count: page_count}}
     end
+
+    {:reply, :ok, %{pages: pages, action: action, page_count: page_count}}
   end
 
   @impl true
