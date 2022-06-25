@@ -23,6 +23,7 @@ erl_crash.dump
 lilac-*.tar
 
 config/prod.exs
+config/dev.exs
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/elixir,phoenix
