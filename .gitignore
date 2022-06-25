@@ -22,7 +22,7 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 lilac-*.tar
 
-# config/prod.exs
+config/prod.exs
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/elixir,phoenix
