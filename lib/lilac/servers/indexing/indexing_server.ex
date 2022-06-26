@@ -83,37 +83,37 @@ defmodule Lilac.Servers.Indexing do
           indexing_progress: pid
         }
   defp start_servers(action, user) do
-    if Enum.any?(Supervisor.which_children(ConvertingSupervisor), fn child ->
-         Kernel.elem(child, 0) |> String.starts_with?("#{user.id}")
-       end) do
-      {:ok, converting_pid} =
-        Supervisor.restart_child(ConvertingSupervisor, "#{user.id}-converting")
+    converting_pid =
+      case Supervisor.restart_child(ConvertingSupervisor, "#{user.id}-converting") do
+        {:ok, pid} ->
+          pid
 
-      {:ok, indexing_progress_pid} =
-        Supervisor.restart_child(ConvertingSupervisor, "#{user.id}-indexing-progress")
+        {:error, :not_found} ->
+          {:ok, converting_pid} =
+            Supervisor.start_child(
+              ConvertingSupervisor,
+              create_converting_child_spec(user)
+            )
 
-      %{
-        converting: converting_pid,
-        indexing_progress: indexing_progress_pid
-      }
-    else
-      {:ok, converting_pid} =
-        Supervisor.start_child(
-          ConvertingSupervisor,
-          create_converting_child_spec(user)
-        )
+          converting_pid
+      end
 
-      {:ok, indexing_progress_pid} =
-        Supervisor.start_child(
-          ConvertingSupervisor,
-          create_indexing_progress_child_spec(action, user)
-        )
+    indexing_progress_pid =
+      case Supervisor.restart_child(ConvertingSupervisor, "#{user.id}-indexing-progress") do
+        {:ok, pid} ->
+          pid
 
-      %{
-        converting: converting_pid,
-        indexing_progress: indexing_progress_pid
-      }
-    end
+        {:error, :not_found} ->
+          {:ok, indexing_progress_pid} =
+            Supervisor.start_child(
+              ConvertingSupervisor,
+              create_indexing_progress_child_spec(action, user)
+            )
+
+          indexing_progress_pid
+      end
+
+    %{converting: converting_pid, indexing_progress: indexing_progress_pid}
   end
 
   @spec create_converting_child_spec(%Lilac.User{}) ::
