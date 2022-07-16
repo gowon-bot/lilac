@@ -60,6 +60,8 @@ defmodule Lilac.Indexing do
         fn page_number ->
           page = fetch_page(user, %{params | page: page_number})
 
+          IO.puts("Updating user #{user.username} with #{length(page.tracks)} scrobbles")
+
           Lilac.Servers.Converting.convert_page(
             pids.converting,
             page,
