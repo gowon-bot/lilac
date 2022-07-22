@@ -55,16 +55,18 @@ defmodule Lilac.Indexing do
         Lilac.Servers.IndexingProgress.add_page(pids.indexing_progress, page_number)
       end)
 
+      chunks = Enum.chunk_every(1..total_pages, 3)
+
       Lilac.Parallel.map(
-        1..total_pages,
-        fn page_number ->
-          page = fetch_page(user, %{params | page: page_number})
+        chunks,
+        fn chunk ->
+          pages = fetch_pages(user, params, chunk)
 
           IO.puts("Updating user #{user.username} with #{length(page.tracks)} scrobbles")
 
-          Lilac.Servers.Converting.convert_page(
+          Lilac.Servers.Converting.convert_pages(
             pids.converting,
-            page,
+            pages,
             user,
             pids.indexing_progress
           )
@@ -94,6 +96,14 @@ defmodule Lilac.Indexing do
         from(e in elem, where: e.user_id == ^user.id) |> Lilac.Repo.delete_all()
       end
     )
+  end
+
+  @spec fetch_pages(%Lilac.User{}, %Params.RecentTracks{}, [integer]) ::
+          [%LastFM.Responses.RecentTracks{}]
+  defp fetch_pages(user, params, chunk) do
+    Enum.map(chunk, fn page_number ->
+      fetch_page(user, %Params.RecentTracks{params | page: page_number})
+    end)
   end
 
   @spec fetch_page(%Lilac.User{}, %Params.RecentTracks{}, integer) ::

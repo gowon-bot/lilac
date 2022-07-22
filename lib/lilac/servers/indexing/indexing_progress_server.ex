@@ -8,10 +8,12 @@ defmodule Lilac.Servers.IndexingProgress do
   alias Lilac.Servers.Concurrency
 
   # Client API
+  def capture_progress(pid, user, pages) when not is_list(pages) do
+    capture_progress(pid, user, [pages])
+  end
 
-  @spec capture_progress(atom | pid | {atom, any} | {:via, atom, any}, any, any) :: any
-  def capture_progress(pid, user, page) do
-    GenServer.call(pid, {:capture_progress, user, page})
+  def capture_progress(pid, user, pages) do
+    GenServer.call(pid, {:capture_progress, user, pages})
   end
 
   def add_page(pid, page_number) do
@@ -37,18 +39,23 @@ defmodule Lilac.Servers.IndexingProgress do
   end
 
   @impl true
-  def handle_call({:capture_progress, user, page}, _from, %{
+  def handle_call({:capture_progress, user, completed_pages}, _from, %{
         pages: pages,
         action: action,
         page_count: page_count
       }) do
-    pages = Enum.filter(pages, fn el -> el != page.meta.page end)
+    total_pages = Enum.at(completed_pages, 0).meta.total_pages
 
-    page_count = page_count + 1
+    pages =
+      Enum.filter(pages, fn el ->
+        Enum.map(completed_pages, fn page -> page.meta.page end) |> Enum.member?(el)
+      end)
 
-    update_subscription(action, page_count, page.meta.total_pages, user.id)
+    page_count = page_count + length(completed_pages)
 
-    if page_count == page.meta.total_pages do
+    update_subscription(action, page_count, total_pages, user.id)
+
+    if page_count == total_pages do
       shutdown(user)
     end
 
