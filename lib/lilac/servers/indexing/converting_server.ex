@@ -14,11 +14,6 @@ defmodule Lilac.Servers.Converting do
     GenServer.cast(pid, {:convert_page, {page, user, indexing_progress_pid}})
   end
 
-  @spec convert_pages(pid, [%Responses.RecentTracks{}], %Lilac.User{}, pid) :: :ok
-  def convert_pages(pid, pages, user, indexing_progress_pid) do
-    GenServer.cast(pid, {:convert_pages, {pages, user, indexing_progress_pid}})
-  end
-
   # Server callbacks
 
   def start_link(_) do
@@ -38,8 +33,11 @@ defmodule Lilac.Servers.Converting do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
     artist_map = convert_artists(scrobbles)
+
     album_map = convert_albums(artist_map, scrobbles)
+
     track_map = convert_tracks(artist_map, album_map, scrobbles)
+
     counting_maps = count(scrobbles, artist_map, album_map, track_map)
 
     :ok = Lilac.Servers.Counting.upsert(CountingServer, user, counting_maps)
@@ -47,28 +45,6 @@ defmodule Lilac.Servers.Converting do
     insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
 
     Lilac.Servers.IndexingProgress.capture_progress(indexing_progress_pid, user, page)
-
-    {:noreply, %{}}
-  end
-
-  @impl true
-  @spec handle_cast({:convert_pages, {[Responses.RecentTracks.t()], %Lilac.User{}, pid}}, term) ::
-          {:noreply, :ok}
-  def handle_cast({:convert_pages, {pages, user, indexing_progress_pid}}, _state) do
-    scrobbles =
-      pages |> Enum.flat_map(fn page -> Enum.filter(page.tracks, &(not &1.is_now_playing)) end)
-
-    artist_map = convert_artists(scrobbles)
-    album_map = convert_albums(artist_map, scrobbles)
-    track_map = convert_tracks(artist_map, album_map, scrobbles)
-
-    counting_maps = count(scrobbles, artist_map, album_map, track_map)
-
-    :ok = Lilac.Servers.Counting.upsert(CountingServer, user, counting_maps)
-
-    insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
-
-    Lilac.Servers.IndexingProgress.capture_progress(indexing_progress_pid, user, pages)
 
     {:noreply, %{}}
   end
