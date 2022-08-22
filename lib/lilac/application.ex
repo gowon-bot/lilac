@@ -35,6 +35,8 @@ defmodule Lilac.Application do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Lilac.Supervisor]
     Supervisor.start_link(children, opts)
+
+    Redix.start_link(host: Application.fetch_env!(:lilac, :redis_host), name: :redix)
   end
 
   # Tell Phoenix to update the endpoint configuration
