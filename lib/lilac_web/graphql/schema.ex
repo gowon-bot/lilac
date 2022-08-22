@@ -11,7 +11,14 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.Misc.ping/3)
     end
 
-    # Music entities
+    # Users
+    field :users, non_null(list_of(non_null(:user))) do
+      arg(:filters, :user_input)
+
+      resolve(&Resolvers.User.users/3)
+    end
+
+    # To be deprecated/standardized
     field :all_artists, non_null(list_of(non_null(:artist))) do
       resolve(&Resolvers.Artists.all_artists/3)
     end
