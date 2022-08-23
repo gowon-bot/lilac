@@ -32,11 +32,11 @@ defmodule LilacWeb.Schema.Types do
   end
 
   enum :privacy do
-    value(:PRIVATE, description: "No information is displayed")
-    value(:DISCORD, description: "Discord tag is displayed")
-    value(:FMUSERNAME, description: "Last.fm username is displayed")
-    value(:BOTH, description: "Discord tag is displayed and last.fm is linked")
-    value(:UNSET, description: "Default value; same as private")
+    value(:private, description: "No information is displayed")
+    value(:discord, description: "Discord tag is displayed")
+    value(:fmusername, description: "Last.fm username is displayed")
+    value(:both, description: "Discord tag is displayed and last.fm is linked")
+    value(:unset, description: "Default value; same as private")
   end
 
   object :indexing_progress do
