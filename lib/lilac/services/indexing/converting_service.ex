@@ -2,6 +2,7 @@ defmodule Lilac.Converting do
   import Ecto.Query, only: [from: 1, from: 2]
 
   alias Lilac.ConversionMap
+  alias Lilac.Converting.Caching
 
   # Entities
   alias Lilac.{Artist, Album, Track}
@@ -12,11 +13,17 @@ defmodule Lilac.Converting do
   def generate_artist_map(artists) do
     artists = Enum.uniq(artists)
 
-    query = from(a in Artist, where: a.name in ^artists)
+    conversion_map = Caching.fetch_cached_artists(artists)
+
+    uncached_artists = Enum.filter(artists, fn a -> !ConversionMap.has?(conversion_map, a) end)
+
+    query = from(a in Artist, where: a.name in ^uncached_artists)
 
     artists = query |> Lilac.Repo.all()
 
-    add_artists_to_conversion_map(artists)
+    if length(artists) > 0, do: Caching.cache_artists(artists)
+
+    add_artists_to_conversion_map(artists, conversion_map)
   end
 
   @spec create_missing_artists(map, [String.t()]) :: map
@@ -29,6 +36,8 @@ defmodule Lilac.Converting do
       new_artists = Enum.map(artists, fn a -> %{name: a} end)
 
       {_count, inserted_artists} = Lilac.Repo.insert_all(Artist, new_artists, returning: true)
+
+      Caching.cache_artists(inserted_artists)
 
       add_artists_to_conversion_map(inserted_artists, conversion_map)
     end

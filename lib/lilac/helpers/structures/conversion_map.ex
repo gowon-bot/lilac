@@ -65,7 +65,7 @@ defmodule Lilac.ConversionMap do
   defp clean_key(key) do
     cond do
       is_nil(key) -> ""
-      is_bitstring(key) -> String.downcase(key)
+      is_bitstring(key) || is_binary(key) -> String.downcase(key)
       true -> key
     end
   end

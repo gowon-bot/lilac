@@ -50,7 +50,8 @@ defmodule Lilac.MixProject do
       {:poison, "~> 5.0"},
       {:timex, "~> 3.7"},
       {:absinthe_phoenix, "~> 2.0.0"},
-      {:cors_plug, "~> 3.0"}
+      {:cors_plug, "~> 3.0"},
+      {:redix, "~> 1.1"}
     ]
   end
 
