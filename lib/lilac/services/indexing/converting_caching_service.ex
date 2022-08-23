@@ -13,7 +13,7 @@ defmodule Lilac.Converting.Caching do
 
     Redix.pipeline(
       :redix,
-      Enum.map(artists, fn a -> ["EXPIRE", artist_key(a.name), default_expiry()] end) ++ [mset]
+      [mset] ++ Enum.map(artists, fn a -> ["EXPIRE", artist_key(a.name), default_expiry()] end)
     )
   end
 
