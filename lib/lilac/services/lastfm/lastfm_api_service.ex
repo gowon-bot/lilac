@@ -18,8 +18,8 @@ defmodule Lilac.LastFM.API do
     end
   end
 
-  @spec handle_response(term) :: {:ok | :error, struct}
-  def handle_response(response) do
+  @spec handle_response(term, function) :: {:ok | :error, struct}
+  def handle_response(response, converter) do
     case response do
       {:error, error} ->
         {:error,
@@ -31,7 +31,7 @@ defmodule Lilac.LastFM.API do
       {:ok, %{body: body}} ->
         if Map.has_key?(body, "error"),
           do: {:error, Errors.parse_error(body)},
-          else: {:ok, Responses.RecentTracks.from_map(body)}
+          else: {:ok, converter.(body)}
     end
   end
 end

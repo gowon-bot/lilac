@@ -32,6 +32,22 @@ defmodule LilacWeb.Schema do
     field :all_tracks, non_null(list_of(non_null(:track))) do
       resolve(&Resolvers.Tracks.all_tracks/3)
     end
+
+    # Who knows
+    field :who_knows_artist, non_null(:who_knows_artist_response) do
+      arg(:artist, :artist_input)
+      arg(:settings, :who_knows_input)
+
+      resolve(&Resolvers.WhoKnows.who_knows_artist/3)
+    end
+
+    field :who_knows_artist_rank, non_null(:who_knows_artist_rank) do
+      arg(:artist, :artist_input)
+      arg(:user, :user_input)
+      arg(:settings, :who_knows_input)
+
+      resolve(&Resolvers.WhoKnows.who_knows_artist_rank/3)
+    end
   end
 
   mutation do
