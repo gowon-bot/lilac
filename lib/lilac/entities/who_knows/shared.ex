@@ -1,3 +1,8 @@
 defmodule Lilac.WhoKnows.Row do
-  defstruct user: %Lilac.User{}, playcount: integer
+  defstruct [:user, :playcount]
+
+  @type t() :: %__MODULE__{
+          user: Lilac.User.t(),
+          playcount: integer()
+        }
 end

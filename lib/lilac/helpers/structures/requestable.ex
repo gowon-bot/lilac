@@ -29,6 +29,7 @@ defmodule Lilac.Requestable do
 
   @spec is_authed?(Lilac.Requestable.ambiguous()) :: boolean
   def is_authed?(string_or_requestable) do
-    not is_binary(string_or_requestable) and string_or_requestable.session != nil
+    not is_binary(string_or_requestable) and not is_nil(string_or_requestable) and
+      not is_nil(string_or_requestable.session)
   end
 end

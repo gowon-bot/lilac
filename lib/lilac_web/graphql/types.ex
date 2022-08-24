@@ -47,6 +47,14 @@ defmodule LilacWeb.Schema.Types do
     field :action, non_null(:string)
   end
 
+  # Counts
+  object :artist_count do
+    field :artist, non_null(:artist)
+    field :playcount, non_null(:integer)
+
+    field :user, non_null(:user)
+  end
+
   # Who knows
   object :who_knows_artist_response do
     field :rows, non_null(list_of(non_null(:who_knows_row)))
@@ -56,6 +64,17 @@ defmodule LilacWeb.Schema.Types do
   object :who_knows_row do
     field :user, non_null(:user)
     field :playcount, non_null(:integer)
+  end
+
+  object :who_knows_artist_rank do
+    field :artist, :artist
+
+    field :rank, non_null(:integer)
+    field :playcount, non_null(:integer)
+    field :total_listeners, non_null(:integer)
+
+    field :above, :artist_count
+    field :below, :artist_count
   end
 
   # ======
