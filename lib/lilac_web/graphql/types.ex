@@ -55,15 +55,27 @@ defmodule LilacWeb.Schema.Types do
     field :user, non_null(:user)
   end
 
+  object :album_count do
+    field :album, non_null(:album)
+    field :playcount, non_null(:integer)
+
+    field :user, non_null(:user)
+  end
+
   # Who knows
+  object :who_knows_row do
+    field :user, non_null(:user)
+    field :playcount, non_null(:integer)
+  end
+
   object :who_knows_artist_response do
     field :rows, non_null(list_of(non_null(:who_knows_row)))
     field :artist, non_null(:artist)
   end
 
-  object :who_knows_row do
-    field :user, non_null(:user)
-    field :playcount, non_null(:integer)
+  object :who_knows_album_response do
+    field :rows, non_null(list_of(non_null(:who_knows_row)))
+    field :album, non_null(:album)
   end
 
   object :who_knows_artist_rank do
@@ -75,6 +87,17 @@ defmodule LilacWeb.Schema.Types do
 
     field :above, :artist_count
     field :below, :artist_count
+  end
+
+  object :who_knows_album_rank do
+    field :artist, :album
+
+    field :rank, non_null(:integer)
+    field :playcount, non_null(:integer)
+    field :total_listeners, non_null(:integer)
+
+    field :above, :album_count
+    field :below, :album_count
   end
 
   # ======
@@ -99,5 +122,10 @@ defmodule LilacWeb.Schema.Types do
   # Music entities
   input_object :artist_input do
     field :name, :string
+  end
+
+  input_object :album_input do
+    field :name, :string
+    field :artist, :artist_input
   end
 end

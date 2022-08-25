@@ -55,7 +55,7 @@ defmodule Lilac.LastFM.API.Params do
     if Map.has_key?(params, :username) and not is_nil(params.username) do
       Map.put(params, :username, Lilac.Requestable.from_ambiguous(params.username).username)
     else
-      params
+      Map.delete(params, :username)
     end
   end
 end

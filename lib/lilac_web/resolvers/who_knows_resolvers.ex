@@ -23,4 +23,29 @@ defmodule LilacWeb.Resolvers.WhoKnows do
         error
     end
   end
+
+  def who_knows_album(_root, args, _info) do
+    case Lilac.LastFM.get_album(args.album.artist.name, args.album.name) do
+      {:ok, album} ->
+        {:ok, Lilac.Services.WhoKnows.who_knows_album(album, Map.get(args, :settings, %{}))}
+
+      error ->
+        error
+    end
+  end
+
+  def who_knows_album_rank(_root, args, _info) do
+    case Lilac.LastFM.get_album(args.album.artist.name, args.album.name) do
+      {:ok, album} ->
+        {:ok,
+         Lilac.Services.WhoKnows.who_knows_album_rank(
+           album,
+           Lilac.Repo.get_by(Lilac.User, args.user),
+           Map.get(args, :settings, %{})
+         )}
+
+      error ->
+        error
+    end
+  end
 end

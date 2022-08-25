@@ -20,4 +20,26 @@ defmodule Lilac.WhoKnows do
             below: Lilac.ArtistCount.t()
           }
   end
+
+  defmodule WhoKnowsAlbumResponse do
+    defstruct [:rows, :album]
+
+    @type t() :: %__MODULE__{
+            rows: [Lilac.WhoKnows.Row.t()],
+            album: Lilac.Album.t()
+          }
+  end
+
+  defmodule WhoKnowsAlbumRank do
+    defstruct [:album, :rank, :playcount, :total_listeners, :above, :below]
+
+    @type t() :: %__MODULE__{
+            album: Lilac.Album.t(),
+            rank: integer(),
+            playcount: integer(),
+            total_listeners: integer(),
+            above: Lilac.AlbumCount.t(),
+            below: Lilac.AlbumCount.t()
+          }
+  end
 end

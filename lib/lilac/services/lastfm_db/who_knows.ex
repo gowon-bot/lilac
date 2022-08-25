@@ -1,7 +1,13 @@
 defmodule Lilac.Services.WhoKnows do
   import Ecto.Query, only: [from: 2]
 
-  alias Lilac.WhoKnows.{WhoKnowsArtistResponse, WhoKnowsArtistRank}
+  alias Lilac.WhoKnows.{
+    WhoKnowsArtistResponse,
+    WhoKnowsArtistRank,
+    WhoKnowsAlbumResponse,
+    WhoKnowsAlbumRank
+  }
+
   alias Lilac.InputParser
   alias Lilac.InputParser.{WhoKnows}
 
@@ -37,6 +43,47 @@ defmodule Lilac.Services.WhoKnows do
 
       %WhoKnowsArtistRank{
         artist: artist,
+        rank: user_row_idx + 1,
+        playcount: Enum.at(rows, user_row_idx).playcount,
+        total_listeners: length(rows),
+        above: if(user_row_idx != 0, do: Enum.at(rows, user_row_idx - 1), else: nil),
+        below: if(user_row_idx < length(rows) - 1, do: Enum.at(rows, user_row_idx + 1), else: nil)
+      }
+    end
+  end
+
+  @spec who_knows_album(%Lilac.Album{}, %Lilac.WhoKnows.Input{}) :: %WhoKnowsAlbumResponse{}
+  def who_knows_album(album, settings) do
+    if !album do
+      %WhoKnowsAlbumResponse{album: album, rows: []}
+    else
+      rows =
+        from(ac in Lilac.AlbumCount,
+          join: u in Lilac.User,
+          on: ac.user_id == u.id,
+          where: ac.album_id == ^album.id,
+          order_by: [desc: ac.playcount, desc: u.username],
+          preload: [:user]
+        )
+        |> parse_who_knows_settings(settings)
+        |> Lilac.Repo.all()
+
+      %WhoKnowsAlbumResponse{album: album, rows: rows}
+    end
+  end
+
+  @spec who_knows_album_rank(%Lilac.Album{}, %Lilac.User{}, %Lilac.WhoKnows.Input{}) ::
+          %WhoKnowsAlbumRank{}
+  def who_knows_album_rank(album, user, settings) do
+    if !album do
+      %WhoKnowsAlbumRank{}
+    else
+      rows = who_knows_album(album, settings).rows
+
+      user_row_idx = Enum.find_index(rows, fn r -> r.user_id == user.id end)
+
+      %WhoKnowsAlbumRank{
+        album: album,
         rank: user_row_idx + 1,
         playcount: Enum.at(rows, user_row_idx).playcount,
         total_listeners: length(rows),
