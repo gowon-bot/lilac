@@ -33,6 +33,13 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.Tracks.all_tracks/3)
     end
 
+    # Entities
+    field :scrobbles, non_null(:scrobbles_page) do
+      arg(:filters, :scrobbles_filters)
+
+      resolve(&Resolvers.Scrobbles.list/3)
+    end
+
     # Who knows
     field :who_knows_artist, non_null(:who_knows_artist_response) do
       arg(:artist, :artist_input)

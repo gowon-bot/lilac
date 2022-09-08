@@ -44,7 +44,7 @@ defmodule Lilac.Converting do
   end
 
   @spec add_artists_to_conversion_map([%Artist{}], map) :: map
-  defp add_artists_to_conversion_map(artists, map \\ %{}) do
+  defp add_artists_to_conversion_map(artists, map) do
     Enum.reduce(
       artists,
       map,

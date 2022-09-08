@@ -32,6 +32,15 @@ defmodule LilacWeb.Schema.Types do
     field :last_indexed, :date
   end
 
+  object :scrobble do
+    field :scrobbled_at, :date
+
+    field :artist, :artist
+    field :album, :album
+    field :track, :track
+    field :user, :user
+  end
+
   enum :privacy do
     value(:private, description: "No information is displayed")
     value(:discord, description: "Discord tag is displayed")
@@ -100,6 +109,19 @@ defmodule LilacWeb.Schema.Types do
     field :below, :album_count
   end
 
+  # Pages
+  object(:scrobbles_page) do
+    field :scrobbles, non_null(list_of(non_null(:scrobble)))
+    field :pagination, non_null(:pagination)
+  end
+
+  object(:pagination) do
+    field :current_page, non_null(:integer)
+    field :total_pages, non_null(:integer)
+    field :total_items, non_null(:integer)
+    field :per_page, non_null(:integer)
+  end
+
   # ======
   # Inputs
   # ======
@@ -127,5 +149,24 @@ defmodule LilacWeb.Schema.Types do
   input_object :album_input do
     field :name, :string
     field :artist, :artist_input
+  end
+
+  input_object :track_input do
+    field :name, :string
+    field :artist, :artist_input
+    field :album, :album_input
+  end
+
+  input_object :page_input do
+    field :page, non_null(:integer)
+    field :per_page, non_null(:integer)
+  end
+
+  input_object :scrobbles_filters do
+    field :user, :user_input
+    field :artist, :artist_input
+    field :album, :album_input
+    field :track, :track_input
+    field :pagination, :page_input
   end
 end

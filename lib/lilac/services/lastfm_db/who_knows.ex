@@ -9,7 +9,6 @@ defmodule Lilac.Services.WhoKnows do
   }
 
   alias Lilac.InputParser
-  alias Lilac.InputParser.{WhoKnows}
 
   @spec who_knows_artist(%Lilac.Artist{}, %Lilac.WhoKnows.Input{}) :: %WhoKnowsArtistResponse{}
   def who_knows_artist(artist, settings) do
@@ -96,8 +95,8 @@ defmodule Lilac.Services.WhoKnows do
   @spec parse_who_knows_settings(Ecto.Query.t(), %Lilac.WhoKnows.Input{}) :: Ecto.Query.t()
   defp parse_who_knows_settings(query, settings) do
     query
-    |> WhoKnows.maybe_guild_id(Map.get(settings, :guild_id))
-    |> WhoKnows.maybe_user_ids(Map.get(settings, :user_ids))
+    |> InputParser.WhoKnows.maybe_guild_id(Map.get(settings, :guild_id))
+    |> InputParser.WhoKnows.maybe_user_ids(Map.get(settings, :user_ids))
     |> InputParser.maybe_limit(Map.get(settings, :limit))
   end
 end
