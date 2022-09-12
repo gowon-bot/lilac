@@ -7,11 +7,13 @@ defmodule Lilac.Servers.Concurrency do
 
   @spec register(pid | atom, action(), integer) :: no_return
   def register(pid, action, user_id) do
+    IO.puts("Registering #{user_id} as doing #{action}")
     GenServer.call(pid, {:register, action, user_id})
   end
 
   @spec unregister(pid | atom, action(), integer) :: no_return
   def unregister(pid, action, user_id) do
+    IO.puts("Unregistering #{user_id} as doing #{action}")
     GenServer.call(pid, {:unregister, action, user_id})
   end
 
