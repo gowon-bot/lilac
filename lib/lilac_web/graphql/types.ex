@@ -23,6 +23,11 @@ defmodule LilacWeb.Schema.Types do
     field :album, :album
   end
 
+  object :ambiguous_track do
+    field :artist, non_null(:artist)
+    field :name, non_null(:string)
+  end
+
   object :user do
     field :id, non_null(:id)
     field :username, non_null(:string)
@@ -71,6 +76,13 @@ defmodule LilacWeb.Schema.Types do
     field :user, non_null(:user)
   end
 
+  object :ambiguous_track_count do
+    field :track, non_null(:ambiguous_track)
+    field :playcount, non_null(:integer)
+
+    field :user, non_null(:user)
+  end
+
   # Who knows
   object :who_knows_row do
     field :user, non_null(:user)
@@ -87,6 +99,11 @@ defmodule LilacWeb.Schema.Types do
     field :album, non_null(:album)
   end
 
+  object :who_knows_track_response do
+    field :rows, non_null(list_of(non_null(:who_knows_row)))
+    field :track, non_null(:track)
+  end
+
   object :who_knows_artist_rank do
     field :artist, :artist
 
@@ -99,7 +116,7 @@ defmodule LilacWeb.Schema.Types do
   end
 
   object :who_knows_album_rank do
-    field :artist, :album
+    field :album, :album
 
     field :rank, non_null(:integer)
     field :playcount, non_null(:integer)
@@ -107,6 +124,17 @@ defmodule LilacWeb.Schema.Types do
 
     field :above, :album_count
     field :below, :album_count
+  end
+
+  object :who_knows_track_rank do
+    field :track, :ambiguous_track
+
+    field :rank, non_null(:integer)
+    field :playcount, non_null(:integer)
+    field :total_listeners, non_null(:integer)
+
+    field :above, :ambiguous_track_count
+    field :below, :ambiguous_track_count
   end
 
   # Pages

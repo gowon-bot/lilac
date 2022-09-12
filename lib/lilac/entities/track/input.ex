@@ -1,4 +1,4 @@
-defmodule Lilac.TRACK.Input do
+defmodule Lilac.Track.Input do
   defstruct [:name, :artist, :album]
 
   @type t() :: %__MODULE__{

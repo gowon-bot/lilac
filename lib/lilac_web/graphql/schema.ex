@@ -70,6 +70,21 @@ defmodule LilacWeb.Schema do
 
       resolve(&Resolvers.WhoKnows.who_knows_album_rank/3)
     end
+
+    field :who_knows_track, non_null(:who_knows_track_response) do
+      arg(:track, :track_input)
+      arg(:settings, :who_knows_input)
+
+      resolve(&Resolvers.WhoKnows.who_knows_track/3)
+    end
+
+    field :who_knows_track_rank, non_null(:who_knows_track_rank) do
+      arg(:track, :track_input)
+      arg(:user, :user_input)
+      arg(:settings, :who_knows_input)
+
+      resolve(&Resolvers.WhoKnows.who_knows_track_rank/3)
+    end
   end
 
   mutation do

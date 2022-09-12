@@ -1,7 +1,7 @@
 defmodule Lilac.LastFM.API do
   use HTTPoison.Base
 
-  alias Lilac.LastFM.{Responses, Errors}
+  alias Lilac.LastFM.{Errors}
 
   def process_request_url(nil) do
     "http://ws.audioscrobbler.com/2.0/"

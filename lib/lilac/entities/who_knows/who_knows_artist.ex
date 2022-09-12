@@ -42,4 +42,26 @@ defmodule Lilac.WhoKnows do
             below: Lilac.AlbumCount.t()
           }
   end
+
+  defmodule WhoKnowsTrackResponse do
+    defstruct [:rows, :track]
+
+    @type t() :: %__MODULE__{
+            rows: [Lilac.WhoKnows.Row.t()],
+            track: Lilac.Track.Ambiguous.t()
+          }
+  end
+
+  defmodule WhoKnowsTrackRank do
+    defstruct [:track, :rank, :playcount, :total_listeners, :above, :below]
+
+    @type t() :: %__MODULE__{
+            track: Lilac.Track.t(),
+            rank: integer(),
+            playcount: integer(),
+            total_listeners: integer(),
+            above: Lilac.TrackCount.Ambiguous.t(),
+            below: Lilac.TrackCount.Ambiguous.t()
+          }
+  end
 end

@@ -9,7 +9,7 @@ defmodule Lilac.Servers.Converting do
 
   # Client API
 
-  @spec convert_page(pid, %Responses.RecentTracks{}, %Lilac.User{}, pid) :: :ok
+  @spec convert_page(pid, Responses.RecentTracks.t(), Lilac.User.t(), pid) :: :ok
   def convert_page(pid, page, user, indexing_progress_pid) do
     GenServer.cast(pid, {:convert_page, {page, user, indexing_progress_pid}})
   end
@@ -27,7 +27,7 @@ defmodule Lilac.Servers.Converting do
   end
 
   @impl true
-  @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), %Lilac.User{}, pid}}, term) ::
+  @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), Lilac.User.t(), pid}}, term) ::
           {:noreply, :ok}
   def handle_cast({:convert_page, {page, user, indexing_progress_pid}}, _state) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))

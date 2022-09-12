@@ -48,4 +48,29 @@ defmodule LilacWeb.Resolvers.WhoKnows do
         error
     end
   end
+
+  def who_knows_track(_root, args, _info) do
+    case Lilac.LastFM.get_ambiguous_track(args.track.artist.name, args.track.name) do
+      {:ok, track} ->
+        {:ok, Lilac.Services.WhoKnows.who_knows_track(track, Map.get(args, :settings, %{}))}
+
+      error ->
+        error
+    end
+  end
+
+  def who_knows_track_rank(_root, args, _info) do
+    case Lilac.LastFM.get_ambiguous_track(args.track.artist.name, args.track.name) do
+      {:ok, track} ->
+        {:ok,
+         Lilac.Services.WhoKnows.who_knows_track_rank(
+           track,
+           Lilac.Repo.get_by(Lilac.User, args.user),
+           Map.get(args, :settings, %{})
+         )}
+
+      error ->
+        error
+    end
+  end
 end

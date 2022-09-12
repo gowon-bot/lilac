@@ -5,7 +5,7 @@ defmodule Lilac.Servers.Indexing do
 
   # Client api
 
-  @spec index_user(pid | atom, %Lilac.User{}) :: {:error, String.t()} | {:ok, nil}
+  @spec index_user(pid | atom, Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
   def index_user(pid, user) do
     case handle_concurrency(user.id) do
       {:ok, _} ->
@@ -17,7 +17,7 @@ defmodule Lilac.Servers.Indexing do
     end
   end
 
-  @spec update_user(pid | atom, %Lilac.User{}) :: {:error, String.t()} | {:ok, nil}
+  @spec update_user(pid | atom, Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
   def update_user(pid, user) do
     case handle_concurrency(user.id) do
       {:ok, _} ->
@@ -53,7 +53,7 @@ defmodule Lilac.Servers.Indexing do
   end
 
   @impl true
-  @spec handle_cast({:index, %Lilac.User{}}, term) :: {:noreply, nil}
+  @spec handle_cast({:index, Lilac.User.t()}, term) :: {:noreply, nil}
   def handle_cast({:index, user}, _state) do
     pids = start_servers(:indexing, user)
 
@@ -63,7 +63,7 @@ defmodule Lilac.Servers.Indexing do
   end
 
   @impl true
-  @spec handle_cast({:update, %Lilac.User{}}, term) :: {:noreply, nil}
+  @spec handle_cast({:update, Lilac.User.t()}, term) :: {:noreply, nil}
   def handle_cast({:update, user}, _state) do
     pids = start_servers(:updating, user)
 
@@ -72,13 +72,13 @@ defmodule Lilac.Servers.Indexing do
     {:noreply, nil}
   end
 
-  @spec stop_servers(%Lilac.User{}) :: no_return
+  @spec stop_servers(Lilac.User.t()) :: no_return
   def stop_servers(user) do
     Supervisor.terminate_child(ConvertingSupervisor, "#{user.id}-converting")
     Supervisor.terminate_child(ConvertingSupervisor, "#{user.id}-indexing-progress")
   end
 
-  @spec start_servers(:indexing | :updating, %Lilac.User{}) :: %{
+  @spec start_servers(:indexing | :updating, Lilac.User.t()) :: %{
           converting: pid,
           indexing_progress: pid
         }
@@ -116,13 +116,13 @@ defmodule Lilac.Servers.Indexing do
     %{converting: converting_pid, indexing_progress: indexing_progress_pid}
   end
 
-  @spec create_converting_child_spec(%Lilac.User{}) ::
+  @spec create_converting_child_spec(Lilac.User.t()) ::
           :supervisor.child_spec()
   defp create_converting_child_spec(user) do
     Supervisor.child_spec({Lilac.Servers.Converting, %{}}, id: "#{user.id}-converting")
   end
 
-  @spec create_indexing_progress_child_spec(:indexing | :updating, %Lilac.User{}) ::
+  @spec create_indexing_progress_child_spec(:indexing | :updating, Lilac.User.t()) ::
           :supervisor.child_spec()
   defp create_indexing_progress_child_spec(action, user) do
     Supervisor.child_spec({Lilac.Servers.IndexingProgress, action},
