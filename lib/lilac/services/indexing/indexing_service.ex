@@ -3,6 +3,7 @@ defmodule Lilac.Indexing do
 
   alias Lilac.LastFM
   alias Lilac.LastFM.API.Params
+  alias Lilac.LastFM.Responses
 
   @spec index(%{converting: pid, indexing_progress: pid}, %Lilac.User{}) :: no_return
   def index(pids, user) do
@@ -37,53 +38,70 @@ defmodule Lilac.Indexing do
           %Params.RecentTracks{}
         ) :: no_return()
   defp convert_pages(pids, user, params) do
-    page = fetch_page(user, %{params | page: 1})
+    fetched_page = fetch_page(user, %{params | page: 1})
 
-    total_pages = page.meta.total_pages
+    case fetched_page do
+      {:error, _error} ->
+        shutdown_subscription(params, user)
 
-    if total_pages != 0 do
-      first_scrobble =
-        if Enum.at(page.tracks, 0).is_now_playing,
-          do: Enum.at(page.tracks, 1),
-          else: Enum.at(page.tracks, 0)
+      {:ok, %Responses.RecentTracks{meta: %Responses.RecentTracks.Meta{total_pages: 0}}} ->
+        shutdown_subscription(params, user)
 
-      user =
-        Ecto.Changeset.change(user, last_indexed: first_scrobble.scrobbled_at)
-        |> Lilac.Repo.update!()
+      {:ok, page} ->
+        total_pages = page.meta.total_pages
 
-      Enum.each(1..total_pages, fn page_number ->
-        Lilac.Servers.IndexingProgress.add_page(pids.indexing_progress, page_number)
-      end)
+        first_scrobble =
+          if Enum.at(page.tracks, 0).is_now_playing,
+            do: Enum.at(page.tracks, 1),
+            else: Enum.at(page.tracks, 0)
 
-      Lilac.Parallel.map(
-        1..total_pages,
-        fn page_number ->
-          page = fetch_page(user, %{params | page: page_number})
+        user =
+          Ecto.Changeset.change(user, last_indexed: first_scrobble.scrobbled_at)
+          |> Lilac.Repo.update!()
 
-          IO.puts("Updating user #{user.username} with #{length(page.tracks)} scrobbles")
+        Enum.each(1..total_pages, fn page_number ->
+          Lilac.Servers.IndexingProgress.add_page(pids.indexing_progress, page_number)
+        end)
 
-          Lilac.Servers.Converting.convert_page(
-            pids.converting,
-            page,
-            user,
-            pids.indexing_progress
-          )
-        end,
-        size: 5
-      )
-    else
-      # Give the client a chance to form the subscription
-      Process.sleep(300)
+        Lilac.Parallel.map(
+          1..total_pages,
+          fn page_number ->
+            fetched_page = fetch_page(user, %{params | page: page_number})
 
-      Lilac.Servers.IndexingProgress.update_subscription(
-        if(is_nil(params.from), do: :indexing, else: :updating),
-        0,
-        0,
-        user.id
-      )
+            case fetched_page do
+              {:ok, page} ->
+                IO.puts("Updating user #{user.username} with #{length(page.tracks)} scrobbles")
 
-      Lilac.Servers.IndexingProgress.shutdown(user)
+                Lilac.Servers.Converting.convert_page(
+                  pids.converting,
+                  page,
+                  user,
+                  pids.indexing_progress
+                )
+
+              {:error, error} ->
+                IO.puts("An error occurred while indexing: #{inspect(error)}")
+            end
+          end,
+          size: 5
+        )
     end
+  end
+
+  @spec shutdown_subscription(Lilac.LastFM.API.Params.RecentTracks.t(), Lilac.User.t()) ::
+          no_return
+  defp shutdown_subscription(params, user) do
+    # Give the client a chance to form the subscription
+    Process.sleep(300)
+
+    Lilac.Servers.IndexingProgress.update_subscription(
+      if(is_nil(params.from), do: :indexing, else: :updating),
+      0,
+      0,
+      user.id
+    )
+
+    Lilac.Servers.IndexingProgress.shutdown(user)
   end
 
   @spec clear_data(%Lilac.User{}) :: no_return()
@@ -97,7 +115,7 @@ defmodule Lilac.Indexing do
   end
 
   @spec fetch_page(%Lilac.User{}, %Params.RecentTracks{}, integer) ::
-          %LastFM.Responses.RecentTracks{}
+          {:ok, %Responses.RecentTracks{}} | {:error, struct}
   defp fetch_page(user, params, retries \\ 1) do
     recent_tracks = LastFM.recent_tracks(params)
 
@@ -107,11 +125,8 @@ defmodule Lilac.Indexing do
         Process.sleep(300)
         fetch_page(user, params, retries + 1)
 
-      {:error, error} ->
-        error
-
-      {:ok, fetched_page} ->
-        fetched_page
+      response ->
+        response
     end
   end
 end
