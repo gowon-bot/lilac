@@ -1,5 +1,5 @@
 defmodule Lilac.Servers.Indexing do
-  use GenServer, restart: :transient
+  use GenServer, restart: :permanent
 
   alias Lilac.Servers.Concurrency
 
