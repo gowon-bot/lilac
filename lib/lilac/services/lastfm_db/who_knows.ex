@@ -40,15 +40,23 @@ defmodule Lilac.Services.WhoKnows do
     else
       rows = who_knows_artist(artist, settings).rows
 
-      user_row_idx = Enum.find_index(rows, fn r -> r.user_id == user.id end)
+      user_row_idx = Enum.find_index(rows, fn r -> r.user_id == user.id end) || -1
 
       %WhoKnowsArtistRank{
         artist: artist,
         rank: user_row_idx + 1,
         playcount: Enum.at(rows, user_row_idx).playcount,
         total_listeners: length(rows),
-        above: if(user_row_idx != 0, do: Enum.at(rows, user_row_idx - 1), else: nil),
-        below: if(user_row_idx < length(rows) - 1, do: Enum.at(rows, user_row_idx + 1), else: nil)
+        above:
+          if(user_row_idx != 0 and user_row_idx != -1,
+            do: Enum.at(rows, user_row_idx - 1),
+            else: nil
+          ),
+        below:
+          if(user_row_idx < length(rows) - 1 and user_row_idx != -1,
+            do: Enum.at(rows, user_row_idx + 1),
+            else: nil
+          )
       }
     end
   end
