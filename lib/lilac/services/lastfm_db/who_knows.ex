@@ -45,7 +45,7 @@ defmodule Lilac.Services.WhoKnows do
       %WhoKnowsArtistRank{
         artist: artist,
         rank: user_row_idx + 1,
-        playcount: Enum.at(rows, user_row_idx).playcount,
+        playcount: if(user_row_idx != -1, do: Enum.at(rows, user_row_idx).playcount, else: 0),
         total_listeners: length(rows),
         above:
           if(user_row_idx != 0 and user_row_idx != -1,
@@ -94,7 +94,7 @@ defmodule Lilac.Services.WhoKnows do
       %WhoKnowsAlbumRank{
         album: album,
         rank: user_row_idx + 1,
-        playcount: Enum.at(rows, user_row_idx).playcount,
+        playcount: if(user_row_idx != -1, do: Enum.at(rows, user_row_idx).playcount, else: 0),
         total_listeners: length(rows),
         above: if(user_row_idx != 0, do: Enum.at(rows, user_row_idx - 1), else: nil),
         below: if(user_row_idx < length(rows) - 1, do: Enum.at(rows, user_row_idx + 1), else: nil)
@@ -137,7 +137,7 @@ defmodule Lilac.Services.WhoKnows do
       %WhoKnowsTrackRank{
         track: track,
         rank: user_row_idx + 1,
-        playcount: Enum.at(rows, user_row_idx).playcount,
+        playcount: if(user_row_idx != -1, do: Enum.at(rows, user_row_idx).playcount, else: 0),
         total_listeners: length(rows),
         above: if(user_row_idx != 0, do: Enum.at(rows, user_row_idx - 1), else: nil),
         below: if(user_row_idx < length(rows) - 1, do: Enum.at(rows, user_row_idx + 1), else: nil)
