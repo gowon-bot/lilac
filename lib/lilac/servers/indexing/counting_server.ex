@@ -1,5 +1,5 @@
 defmodule Lilac.Servers.Counting do
-  use GenServer, restart: :transient
+  use GenServer, restart: :permanent
 
   alias Lilac.CountingMap
 
@@ -24,13 +24,9 @@ defmodule Lilac.Servers.Counting do
   @spec handle_cast({:upsert, {%Lilac.User{}, CountingMap.counting_maps()}}, term) ::
           {:noreply, map}
   def handle_cast({:upsert, {user, counting_maps}}, _state) do
-    upserts = [
-      Task.async(fn -> Lilac.Counting.upsert_artist_counts(user, counting_maps.artists) end),
-      Task.async(fn -> Lilac.Counting.upsert_album_counts(user, counting_maps.albums) end),
-      Task.async(fn -> Lilac.Counting.upsert_track_counts(user, counting_maps.tracks) end)
-    ]
-
-    Task.await_many(upserts)
+    Lilac.Counting.upsert_artist_counts(user, counting_maps.artists)
+    Lilac.Counting.upsert_album_counts(user, counting_maps.albums)
+    Lilac.Counting.upsert_track_counts(user, counting_maps.tracks)
 
     {:noreply, %{}}
   end
