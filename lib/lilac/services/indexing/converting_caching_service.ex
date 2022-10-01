@@ -21,16 +21,20 @@ defmodule Lilac.Converting.Caching do
   def fetch_cached_artists(artists) do
     artist_names = artists |> Enum.map(fn a -> artist_key(a) end)
 
-    {:ok, ids} = Redix.command(:redix, List.flatten(["MGET", artist_names]))
+    if length(artist_names) > 0 do
+      {:ok, ids} = Redix.command(:redix, List.flatten(["MGET", artist_names]))
 
-    ids
-    |> Enum.with_index()
-    |> Enum.reduce(%{}, fn {id, idx}, acc ->
-      case id do
-        nil -> acc
-        id -> ConversionMap.add(acc, Enum.at(artist_names, idx), String.to_integer(id))
-      end
-    end)
+      ids
+      |> Enum.with_index()
+      |> Enum.reduce(%{}, fn {id, idx}, acc ->
+        case id do
+          nil -> acc
+          id -> ConversionMap.add(acc, Enum.at(artist_names, idx), String.to_integer(id))
+        end
+      end)
+    else
+      %{}
+    end
   end
 
   defp artist_key(artist_name) do
