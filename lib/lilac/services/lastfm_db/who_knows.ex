@@ -89,7 +89,7 @@ defmodule Lilac.Services.WhoKnows do
     else
       rows = who_knows_album(album, settings).rows
 
-      user_row_idx = Enum.find_index(rows, fn r -> r.user_id == user.id end)
+      user_row_idx = Enum.find_index(rows, fn r -> r.user_id == user.id end) || -1
 
       %WhoKnowsAlbumRank{
         album: album,
@@ -132,7 +132,7 @@ defmodule Lilac.Services.WhoKnows do
     else
       rows = who_knows_track(track, settings).rows
 
-      user_row_idx = Enum.find_index(rows, fn r -> r.user.id == user.id end)
+      user_row_idx = Enum.find_index(rows, fn r -> r.user.id == user.id end) || -1
 
       %WhoKnowsTrackRank{
         track: track,
