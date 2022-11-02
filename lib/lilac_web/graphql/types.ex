@@ -143,6 +143,11 @@ defmodule LilacWeb.Schema.Types do
     field :pagination, non_null(:pagination)
   end
 
+  object(:artists_page) do
+    field :artists, non_null(list_of(non_null(:artist)))
+    field :pagination, non_null(:pagination)
+  end
+
   object(:pagination) do
     field :current_page, non_null(:integer)
     field :total_pages, non_null(:integer)
@@ -190,11 +195,26 @@ defmodule LilacWeb.Schema.Types do
     field :per_page, non_null(:integer)
   end
 
+  input_object :tag_input do
+    field :name, :string
+  end
+
+  # Filters
+
   input_object :scrobbles_filters do
     field :user, :user_input
     field :artist, :artist_input
     field :album, :album_input
     field :track, :track_input
     field :pagination, :page_input
+  end
+
+  input_object :artists_filters do
+    field :inputs, list_of(non_null(:artist_input))
+    field :tags, list_of(non_null(:tag_input))
+    field :pagination, :page_input
+
+    field :fetch_tags_for_missing, :boolean
+    field :match_tags_exactly, :boolean
   end
 end

@@ -10,5 +10,7 @@ defmodule Lilac.Artist do
     has_many :tracks, Lilac.Track
 
     has_many :artist_counts, Lilac.ArtistCount
+
+    many_to_many :tags, Lilac.Tag, join_through: "artist_tag"
   end
 end
