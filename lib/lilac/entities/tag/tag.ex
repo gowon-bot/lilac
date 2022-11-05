@@ -4,6 +4,6 @@ defmodule Lilac.Tag do
   schema "tags" do
     field :name, :string
 
-    many_to_many :artists, Lilac.Artist, join_through: "artist_tag"
+    many_to_many :artists, Lilac.Artist, join_through: "artist_tags"
   end
 end

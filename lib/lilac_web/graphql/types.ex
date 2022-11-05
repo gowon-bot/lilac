@@ -10,6 +10,8 @@ defmodule LilacWeb.Schema.Types do
   object :artist do
     field :id, non_null(:id)
     field :name, non_null(:string)
+
+    field :tags, non_null(list_of(non_null(:tag)))
   end
 
   object :album do
@@ -44,6 +46,10 @@ defmodule LilacWeb.Schema.Types do
     field :album, :album
     field :track, :track
     field :user, :user
+  end
+
+  object :tag do
+    field :name, :string
   end
 
   enum :privacy do

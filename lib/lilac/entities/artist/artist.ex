@@ -5,12 +5,13 @@ defmodule Lilac.Artist do
 
   schema "artists" do
     field :name, :string
+    field :checked_for_tags, :boolean
 
     has_many :albums, Lilac.Album
     has_many :tracks, Lilac.Track
 
     has_many :artist_counts, Lilac.ArtistCount
 
-    many_to_many :tags, Lilac.Tag, join_through: "artist_tag"
+    many_to_many :tags, Lilac.Tag, join_through: "artist_tags"
   end
 end
