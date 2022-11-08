@@ -37,6 +37,11 @@ defmodule Lilac.InputParser.Tag do
 
   @spec generate_tag_regex(binary) :: binary
   defp generate_tag_regex(tag_name) do
-    Regex.replace(~r/(\\s+|-|_)/i, tag_name, "(\\s+|-|_)?")
+    cleaned = Regex.replace(~r/(\s+|-|_)/, tag_name, "")
+
+    cleaned
+    |> String.split("")
+    |> Enum.map(fn char -> char <> "(\\s+|-|_)?" end)
+    |> Enum.join("")
   end
 end

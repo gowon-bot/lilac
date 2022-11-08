@@ -210,7 +210,6 @@ defmodule LilacWeb.Schema.Types do
 
   input_object :tag_input do
     field :name, non_null(:string)
-    field :occurences, :integer
   end
 
   # Filters
