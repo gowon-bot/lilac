@@ -5,9 +5,16 @@ defmodule Lilac.Converting do
   alias Lilac.Converting.Caching
 
   # Entities
-  alias Lilac.{Artist, Album, Track}
+  alias Lilac.{Artist, Album, Track, Tag}
 
   # Artists
+
+  @spec convert_artists([String.t()]) :: map
+  def convert_artists(artists) do
+    artist_map = generate_artist_map(artists)
+
+    create_missing_artists(artist_map, artists)
+  end
 
   @spec generate_artist_map([String.t()]) :: map
   def generate_artist_map(artists) do
@@ -185,6 +192,49 @@ defmodule Lilac.Converting do
         album_id,
         track.name
       ]
+    )
+  end
+
+  # Tags
+  @spec convert_tags([String.t()]) :: map
+  def convert_tags(tags) do
+    tag_map = generate_tag_map(tags)
+
+    create_missing_tags(tag_map, tags)
+  end
+
+  @spec generate_tag_map([String.t()]) :: map
+  def generate_tag_map(tags) do
+    tags = Enum.uniq(tags)
+
+    query = from(t in Tag, where: t.name in ^tags)
+
+    tags = query |> Lilac.Repo.all()
+
+    add_tags_to_conversion_map(tags, %{})
+  end
+
+  @spec create_missing_tags(map, [String.t()]) :: map
+  def create_missing_tags(conversion_map, tags) do
+    tags = ConversionMap.filter_unmapped_keys(conversion_map, Enum.uniq(tags))
+
+    if length(tags) == 0 do
+      conversion_map
+    else
+      new_tags = Enum.map(tags, fn t -> %{name: t} end)
+
+      {_count, inserted_tags} = Lilac.Repo.insert_all(Tag, new_tags, returning: true)
+
+      add_tags_to_conversion_map(inserted_tags, conversion_map)
+    end
+  end
+
+  @spec add_tags_to_conversion_map([Tag.t()], map) :: map
+  defp add_tags_to_conversion_map(tags, map) do
+    Enum.reduce(
+      tags,
+      map,
+      fn tag, acc -> ConversionMap.add(acc, tag.name, tag.id) end
     )
   end
 end

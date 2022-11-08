@@ -101,6 +101,14 @@ defmodule LilacWeb.Schema do
 
       resolve(&Resolvers.User.update/3)
     end
+
+    field :tag_artists, :integer do
+      arg(:artists, list_of(non_null(:artist_input)))
+      arg(:tags, list_of(non_null(:tag_input)))
+      arg(:mark_as_checked, :boolean)
+
+      resolve(&Resolvers.Tags.tagArtists/3)
+    end
   end
 
   subscription do
