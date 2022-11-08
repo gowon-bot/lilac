@@ -14,12 +14,35 @@ defmodule Lilac.Services.Tags do
       # ArtistTag
       join: at in ArtistTag,
       as: :artist_tag,
+      on: at.tag_id == t.id,
       # Artist
       join: a in Artist,
-      as: :artist
+      as: :artist,
+      on: a.id == at.artist_id,
+      group_by: [t.id, t.name],
+      select: %{id: t.id, name: t.name, occurrences: count(a.id)},
+      order_by: [desc: count(a.id), asc: t.name]
     )
     |> parse_tag_filters(filters)
     |> Lilac.Repo.all()
+  end
+
+  @spec count(%Tag.Filters{}) :: integer
+  def count(filters) do
+    from(t in Tag,
+      as: :tag,
+      select: count(t.id),
+      # ArtistTag
+      join: at in ArtistTag,
+      as: :artist_tag,
+      on: at.tag_id == t.id,
+      # Artist
+      join: a in Artist,
+      as: :artist,
+      on: a.id == at.artist_id
+    )
+    |> parse_tag_filters(filters |> Map.put(:pagination, nil))
+    |> Lilac.Repo.one()
   end
 
   @spec fetch_tags_for_artists([Artist.Input.t()]) :: no_return

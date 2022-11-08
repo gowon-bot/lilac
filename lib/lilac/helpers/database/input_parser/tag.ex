@@ -1,5 +1,5 @@
 defmodule Lilac.InputParser.Tag do
-  import Ecto.Query, only: [where: 3, dynamic: 2, dynamic: 1, from: 2, select: 3]
+  import Ecto.Query, only: [where: 3, dynamic: 2, dynamic: 1]
 
   alias Ecto.Query
 
@@ -10,30 +10,23 @@ defmodule Lilac.InputParser.Tag do
     else
       tag_names = generate_tag_names(inputs)
 
-      tags_subquery =
-        if(match_exactly,
-          do: from(t in Lilac.Tag, where: t.name in ^tag_names),
-          else: from(t in Lilac.Tag, as: :tag, where: ^matches_tags_condition(tag_names))
-        )
-        |> select([t], t.id)
-
-      artist_tags_subquery =
-        from(at in Lilac.ArtistTag, where: at.tag_id in subquery(tags_subquery))
-        |> select([at], at.artist_id)
-
-      query |> where([artist: a], a.id in subquery(artist_tags_subquery))
+      if match_exactly do
+        query |> where([tag: t], t.name in ^tag_names)
+      else
+        query |> where([tag: t], ^matches_tags_condition(tag_names))
+      end
     end
   end
 
   @spec generate_tag_names([Lilac.Tag.Input.t()]) :: [binary]
-  defp generate_tag_names(inputs) do
+  def generate_tag_names(inputs) do
     inputs
     |> Enum.map(fn input -> Map.get(input, :name) end)
     |> Enum.filter(fn n -> !is_nil(n) end)
   end
 
   @spec matches_tags_condition([binary]) :: Macro.t()
-  defp matches_tags_condition(tag_names) do
+  def matches_tags_condition(tag_names) do
     tag_names
     |> Enum.reduce(dynamic(false), fn tag, acc ->
       regex = "^#{generate_tag_regex(tag)}$"

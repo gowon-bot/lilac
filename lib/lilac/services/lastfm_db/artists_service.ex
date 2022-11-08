@@ -23,7 +23,7 @@ defmodule Lilac.Services.Artists do
     query
     |> InputParser.maybe_page_input(Map.get(filters, :pagination))
     |> InputParser.Artist.maybe_artist_inputs(Map.get(filters, :inputs))
-    |> InputParser.Tag.maybe_tag_inputs(
+    |> InputParser.Artist.maybe_tag_inputs(
       Map.get(filters, :tags),
       Map.get(filters, :match_tags_exactly, false)
     )

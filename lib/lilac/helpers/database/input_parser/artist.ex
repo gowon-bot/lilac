@@ -1,5 +1,5 @@
 defmodule Lilac.InputParser.Artist do
-  import Ecto.Query, only: [where: 3]
+  import Ecto.Query, only: [where: 3, from: 2, select: 3]
 
   alias Lilac.InputParser
   alias Ecto.Query
@@ -34,6 +34,32 @@ defmodule Lilac.InputParser.Artist do
       query |> where([artist: a], a.name == ^input.name)
     else
       query
+    end
+  end
+
+  @spec maybe_tag_inputs(Query.t(), [Lilac.Tag.Input.t()], boolean) :: Query.t()
+  def maybe_tag_inputs(query, inputs, match_exactly) do
+    if is_nil(inputs) || length(inputs) == 0 do
+      query
+    else
+      tag_names = InputParser.Tag.generate_tag_names(inputs)
+
+      tags_subquery =
+        if(match_exactly,
+          do: from(t in Lilac.Tag, where: t.name in ^tag_names),
+          else:
+            from(t in Lilac.Tag,
+              as: :tag,
+              where: ^InputParser.Tag.matches_tags_condition(tag_names)
+            )
+        )
+        |> select([t], t.id)
+
+      artist_tags_subquery =
+        from(at in Lilac.ArtistTag, where: at.tag_id in subquery(tags_subquery))
+        |> select([at], at.artist_id)
+
+      query |> where([artist: a], a.id in subquery(artist_tags_subquery))
     end
   end
 end

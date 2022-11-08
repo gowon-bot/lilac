@@ -49,7 +49,9 @@ defmodule LilacWeb.Schema.Types do
   end
 
   object :tag do
-    field :name, :string
+    field :id, non_null(:integer)
+    field :name, non_null(:string)
+    field :occurrences, :integer
   end
 
   enum :privacy do
@@ -154,6 +156,11 @@ defmodule LilacWeb.Schema.Types do
     field :pagination, non_null(:pagination)
   end
 
+  object(:tags_page) do
+    field :tags, non_null(list_of(non_null(:tag)))
+    field :pagination, non_null(:pagination)
+  end
+
   object(:pagination) do
     field :current_page, non_null(:integer)
     field :total_pages, non_null(:integer)
@@ -202,7 +209,8 @@ defmodule LilacWeb.Schema.Types do
   end
 
   input_object :tag_input do
-    field :name, :string
+    field :name, non_null(:string)
+    field :occurences, :integer
   end
 
   # Filters
@@ -222,5 +230,13 @@ defmodule LilacWeb.Schema.Types do
 
     field :fetch_tags_for_missing, :boolean
     field :match_tags_exactly, :boolean
+  end
+
+  input_object :tags_filters do
+    field :inputs, list_of(non_null(:tag_input))
+    field :artists, list_of(non_null(:artist_input))
+    field :pagination, :page_input
+
+    field :fetch_tags_for_missing, :boolean
   end
 end

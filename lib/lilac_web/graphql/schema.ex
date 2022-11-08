@@ -18,10 +18,17 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.User.users/3)
     end
 
+    # Entities
     field :artists, non_null(:artists_page) do
       arg(:filters, :artists_filters)
 
       resolve(&Resolvers.Artists.list/3)
+    end
+
+    field :tags, non_null(:tags_page) do
+      arg(:filters, :tags_filters)
+
+      resolve(&Resolvers.Tags.list/3)
     end
 
     # To be deprecated/standardized
