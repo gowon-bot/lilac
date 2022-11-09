@@ -18,11 +18,20 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.User.users/3)
     end
 
-    # To be deprecated/standardized
-    field :all_artists, non_null(list_of(non_null(:artist))) do
-      resolve(&Resolvers.Artists.all_artists/3)
+    # Entities
+    field :artists, non_null(:artists_page) do
+      arg(:filters, :artists_filters)
+
+      resolve(&Resolvers.Artists.list/3)
     end
 
+    field :tags, non_null(:tags_page) do
+      arg(:filters, :tags_filters)
+
+      resolve(&Resolvers.Tags.list/3)
+    end
+
+    # To be deprecated/standardized
     field :all_albums, non_null(list_of(non_null(:album))) do
       arg(:artist, :string)
 
@@ -98,6 +107,14 @@ defmodule LilacWeb.Schema do
       arg(:user, :user_input)
 
       resolve(&Resolvers.User.update/3)
+    end
+
+    field :tag_artists, :integer do
+      arg(:artists, list_of(non_null(:artist_input)))
+      arg(:tags, list_of(non_null(:tag_input)))
+      arg(:mark_as_checked, :boolean)
+
+      resolve(&Resolvers.Tags.tagArtists/3)
     end
   end
 
