@@ -31,7 +31,7 @@ defmodule Lilac.InputParser.Tag do
     |> Enum.reduce(dynamic(false), fn tag, acc ->
       regex = "^#{generate_tag_regex(tag)}$"
 
-      dynamic([tag: t], ^acc or fragment("? ~ ?", t.name, ^regex))
+      dynamic([tag: t], ^acc or fragment("? ~* ?", t.name, ^regex))
     end)
   end
 
