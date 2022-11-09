@@ -55,9 +55,7 @@ defmodule Lilac.Servers.Converting do
   def convert_artists(scrobbles) do
     artists = Enum.map(scrobbles, fn s -> s.artist end)
 
-    artist_map = Converting.generate_artist_map(artists)
-
-    Converting.create_missing_artists(artist_map, artists)
+    Converting.convert_artists(artists)
   end
 
   @spec convert_albums(map, scrobbles_type) :: map

@@ -15,7 +15,7 @@ defmodule Lilac.Pagination do
 
     %Lilac.Pagination{
       current_page: current_page,
-      total_pages: ceil(1.0 * count / per_page),
+      total_pages: if(per_page > 0, do: ceil(1.0 * count / per_page), else: 1),
       total_items: count,
       per_page: per_page
     }
