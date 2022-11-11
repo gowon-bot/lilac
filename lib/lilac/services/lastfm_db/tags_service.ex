@@ -1,46 +1,22 @@
 defmodule Lilac.Services.Tags do
-  import Ecto.Query, only: [from: 2]
+  import Ecto.Query, only: [from: 2, select: 3, order_by: 3]
 
   alias Lilac.InputParser
 
   alias Lilac.Tag
   alias Lilac.Artist
-  alias Lilac.ArtistTag
 
   @spec list(%Tag.Filters{}) :: [Tag.t()]
   def list(filters) do
-    from(t in Tag,
-      as: :tag,
-      # ArtistTag
-      join: at in ArtistTag,
-      as: :artist_tag,
-      on: at.tag_id == t.id,
-      # Artist
-      join: a in Artist,
-      as: :artist,
-      on: a.id == at.artist_id,
-      group_by: [t.id, t.name],
-      select: %{id: t.id, name: t.name, occurrences: count(a.id)},
-      order_by: [desc: count(a.id), asc: t.name]
-    )
+    from(t in Tag, as: :tag, group_by: [t.id, t.name])
     |> parse_tag_filters(filters)
+    |> select_and_order_by(filters)
     |> Lilac.Repo.all()
   end
 
   @spec count(%Tag.Filters{}) :: integer
   def count(filters) do
-    from(t in Tag,
-      as: :tag,
-      select: count(t.id),
-      # ArtistTag
-      join: at in ArtistTag,
-      as: :artist_tag,
-      on: at.tag_id == t.id,
-      # Artist
-      join: a in Artist,
-      as: :artist,
-      on: a.id == at.artist_id
-    )
+    from(t in Tag, as: :tag, select: count(t.id))
     |> parse_tag_filters(filters |> Map.put(:pagination, nil))
     |> Lilac.Repo.one()
   end
@@ -90,7 +66,7 @@ defmodule Lilac.Services.Tags do
     if marked_as_checked, do: from(at in Lilac.ArtistTag, update: [set: [checked_for_tags: true]])
   end
 
-  @spec parse_tag_filters(Ecto.Query.t(), Tag.Filters.t()) :: Ecto.Query.t()
+  @spec parse_tag_filters(Query.t(), Tag.Filters.t()) :: Query.t()
   defp parse_tag_filters(query, filters) do
     query
     |> InputParser.maybe_page_input(Map.get(filters, :pagination))
@@ -99,5 +75,18 @@ defmodule Lilac.Services.Tags do
       Map.get(filters, :inputs),
       Map.get(filters, :match_tags_exactly, false)
     )
+  end
+
+  @spec select_and_order_by(Query.t(), Tag.Filters.t()) :: Query.t()
+  defp select_and_order_by(query, filters) do
+    if Map.has_key?(filters, :artists) do
+      query
+      |> select([tag: t, artist: a], %{id: t.id, name: t.name, occurrences: count(a.id)})
+      |> order_by([tag: t, artist: a], desc: count(a.id), asc: t.name)
+    else
+      query
+      |> select([tag: t], %{id: t.id, name: t.name, occurrences: nil})
+      |> order_by([tag: t], asc: t.name)
+    end
   end
 end

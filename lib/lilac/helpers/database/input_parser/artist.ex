@@ -1,5 +1,5 @@
 defmodule Lilac.InputParser.Artist do
-  import Ecto.Query, only: [where: 3, from: 2, select: 3]
+  import Ecto.Query, only: [where: 3, from: 2, select: 3, join: 5]
 
   alias Lilac.InputParser
   alias Ecto.Query
@@ -24,7 +24,13 @@ defmodule Lilac.InputParser.Artist do
         |> Enum.map(fn input -> Map.get(input, :name) end)
         |> Enum.filter(fn n -> !is_nil(n) end)
 
-      query |> where([artist: a], a.name in ^input_names)
+      query
+      |> join(:left, [tag: t], at in Lilac.ArtistTag, as: :artist_tag, on: at.tag_id == t.id)
+      |> join(:left, [tag: t, artist_tag: at], a in Lilac.Artist,
+        as: :artist,
+        on: a.id == at.artist_id
+      )
+      |> where([artist: a], a.name in ^input_names)
     end
   end
 
