@@ -70,7 +70,7 @@ defmodule Lilac.Services.Tags do
   defp parse_tag_filters(query, filters) do
     query
     |> InputParser.maybe_page_input(Map.get(filters, :pagination))
-    |> InputParser.Artist.maybe_artist_inputs(Map.get(filters, :artists))
+    |> InputParser.Tag.maybe_artist_inputs(Map.get(filters, :artists))
     |> InputParser.Tag.maybe_tag_inputs(
       Map.get(filters, :inputs),
       Map.get(filters, :match_tags_exactly, false)

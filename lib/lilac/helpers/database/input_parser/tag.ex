@@ -1,5 +1,5 @@
 defmodule Lilac.InputParser.Tag do
-  import Ecto.Query, only: [where: 3, dynamic: 2, dynamic: 1]
+  import Ecto.Query, only: [where: 3, dynamic: 2, dynamic: 1, join: 5]
 
   alias Ecto.Query
 
@@ -43,5 +43,25 @@ defmodule Lilac.InputParser.Tag do
     |> String.split("")
     |> Enum.map(fn char -> char <> "(\\s+|-|_)?" end)
     |> Enum.join("")
+  end
+
+  @spec maybe_artist_inputs(Query.t(), [Lilac.Artist.Input.t()]) :: Query.t()
+  def maybe_artist_inputs(query, inputs) do
+    if is_nil(inputs) || length(inputs) == 0 do
+      query
+    else
+      input_names =
+        inputs
+        |> Enum.map(fn input -> Map.get(input, :name) end)
+        |> Enum.filter(fn n -> !is_nil(n) end)
+
+      query
+      |> join(:left, [tag: t], at in Lilac.ArtistTag, as: :artist_tag, on: at.tag_id == t.id)
+      |> join(:left, [tag: t, artist_tag: at], a in Lilac.Artist,
+        as: :artist,
+        on: a.id == at.artist_id
+      )
+      |> where([artist: a], a.name in ^input_names)
+    end
   end
 end

@@ -14,26 +14,6 @@ defmodule Lilac.InputParser.Artist do
     end
   end
 
-  @spec maybe_artist_inputs(Query.t(), [Lilac.Artist.Input.t()]) :: Query.t()
-  def maybe_artist_inputs(query, inputs) do
-    if is_nil(inputs) || length(inputs) == 0 do
-      query
-    else
-      input_names =
-        inputs
-        |> Enum.map(fn input -> Map.get(input, :name) end)
-        |> Enum.filter(fn n -> !is_nil(n) end)
-
-      query
-      |> join(:left, [tag: t], at in Lilac.ArtistTag, as: :artist_tag, on: at.tag_id == t.id)
-      |> join(:left, [tag: t, artist_tag: at], a in Lilac.Artist,
-        as: :artist,
-        on: a.id == at.artist_id
-      )
-      |> where([artist: a], a.name in ^input_names)
-    end
-  end
-
   @spec maybe_name(Query.t(), Lilac.Artist.Input.t()) :: Query.t()
   defp maybe_name(query, input) do
     if InputParser.value_not_nil(input, :name) do
@@ -66,6 +46,20 @@ defmodule Lilac.InputParser.Artist do
         |> select([at], at.artist_id)
 
       query |> where([artist: a], a.id in subquery(artist_tags_subquery))
+    end
+  end
+
+  @spec maybe_artist_inputs(Query.t(), [Lilac.Artist.Input.t()]) :: Query.t()
+  def maybe_artist_inputs(query, inputs) do
+    if is_nil(inputs) || length(inputs) == 0 do
+      query
+    else
+      input_names =
+        inputs
+        |> Enum.map(fn input -> Map.get(input, :name) end)
+        |> Enum.filter(fn n -> !is_nil(n) end)
+
+      query |> where([artist: a], a.name in ^input_names)
     end
   end
 end

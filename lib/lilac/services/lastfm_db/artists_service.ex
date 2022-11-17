@@ -1,12 +1,14 @@
 defmodule Lilac.Services.Artists do
-  import Ecto.Query, only: [from: 2]
+  import Ecto.Query, only: [from: 2, join: 5, preload: 3]
 
   alias Lilac.InputParser
   alias Lilac.Artist
 
   @spec list(Artist.Filters.t()) :: [Artist.t()]
   def list(filters) do
-    from(a in Artist, as: :artist, preload: :tags)
+    from(a in Artist, as: :artist)
+    |> join(:left, [artist: a], t in assoc(a, :tags), as: :tag)
+    |> preload([tag: t], tags: t)
     |> parse_artist_filters(filters)
     |> Lilac.Repo.all()
   end
