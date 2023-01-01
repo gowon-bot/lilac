@@ -14,5 +14,8 @@ defmodule Lilac.User do
     has_many :guild_members, Lilac.GuildMember
 
     timestamps()
+
+    # Not persisted
+    field :is_indexing, :boolean, virtual: true
   end
 end

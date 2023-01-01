@@ -1,5 +1,6 @@
 defmodule LilacWeb.Resolvers.User do
   alias Lilac.Services.Auth
+  alias Lilac.GraphQLHelpers
   import Ecto.Query, only: [from: 2]
 
   def index(_root, %{user: user_input}, %{context: context}) do
@@ -18,9 +19,15 @@ defmodule LilacWeb.Resolvers.User do
       else: Lilac.Servers.Indexing.update_user(IndexingServer, user)
   end
 
-  def users(_root, %{filters: user_input}, _context) do
+  def users(_root, %{filters: user_input}, info) do
     query = from u in Lilac.User, where: ^Keyword.new(user_input)
 
-    {:ok, Lilac.Repo.all(query)}
+    users = Lilac.Repo.all(query)
+
+    if GraphQLHelpers.has_field(info, "isIndexing") do
+      {:ok, Lilac.Services.Users.add_is_indexing(users)}
+    else
+      {:ok, users}
+    end
   end
 end

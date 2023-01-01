@@ -37,6 +37,8 @@ defmodule LilacWeb.Schema.Types do
 
     field :privacy, non_null(:privacy)
     field :last_indexed, :date
+
+    field :is_indexing, :boolean
   end
 
   object :scrobble do
