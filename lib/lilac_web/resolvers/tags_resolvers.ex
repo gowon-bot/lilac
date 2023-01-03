@@ -16,8 +16,8 @@ defmodule LilacWeb.Resolvers.Tags do
     {:ok, nil}
   end
 
-  @spec list(any, %{filters: Tag.Filters.t()}, any) :: {:ok, any}
-  def list(_root, %{filters: filters}, _info) do
+  @spec list(any, %{filters: Tag.Filters.t()}, Absinthe.Resolution.t()) :: {:ok, any}
+  def list(_root, %{filters: filters}, info) do
     if Map.get(filters, :fetch_tags_for_missing, false) == true and
          length(Map.get(filters, :artists, [])) > 0 do
       Tags.fetch_tags_for_artists(Map.get(filters, :artists))
@@ -28,7 +28,8 @@ defmodule LilacWeb.Resolvers.Tags do
     {:ok,
      %Tag.Page{
        tags: tags,
-       pagination: Lilac.Pagination.generate(Tags.count(filters), Map.get(filters, :pagination))
+       pagination:
+         Lilac.Pagination.generate(Tags.count(filters), Map.get(filters, :pagination), info)
      }}
   end
 end

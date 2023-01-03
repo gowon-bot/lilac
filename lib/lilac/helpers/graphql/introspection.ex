@@ -3,6 +3,8 @@ defmodule Lilac.GraphQLHelpers.Introspection do
   Provides methods for GraphQL query introspection
   """
 
+  alias Lilac.GraphQLHelpers.Fields
+
   @spec has_field?(Absinthe.Resolution.t(), binary) :: boolean
   def has_field?(info, field) when is_binary(field) do
     Absinthe.Resolution.project(info) |> definition_has_field?(field)
@@ -32,6 +34,11 @@ defmodule Lilac.GraphQLHelpers.Introspection do
       )
 
     !is_nil(definition)
+  end
+
+  @spec requested_pagination?(Absinthe.Resolution.t()) :: boolean()
+  def requested_pagination?(info) do
+    has_field?(info, Fields.pagination()) || has_field?(info, Fields.Filters.pagination())
   end
 
   @spec definition_has_field?([%{name: binary}], binary) :: boolean

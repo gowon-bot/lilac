@@ -7,7 +7,7 @@ defmodule LilacWeb.Resolvers.Scrobbles do
     scrobbles = Scrobbles.list(filters, info)
 
     pagination =
-      Lilac.Pagination.generate(Scrobbles.count(filters), Map.get(filters, :pagination))
+      Lilac.Pagination.generate(Scrobbles.count(filters), Map.get(filters, :pagination), info)
 
     {:ok, %Scrobble.Page{scrobbles: scrobbles, pagination: pagination}}
   end
