@@ -15,4 +15,12 @@ defmodule Lilac.GraphQLHelpers.Fields do
     def track, do: ["scrobbles", "track"]
     def user, do: ["scrobbles", "user"]
   end
+
+  defmodule Artist do
+    def tags, do: ["artists", "tags"]
+
+    defmodule Count do
+      def tags, do: ["aristCounts", "tags"]
+    end
+  end
 end

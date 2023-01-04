@@ -25,11 +25,6 @@ defmodule LilacWeb.Resolvers.Tags do
 
     tags = Tags.list(filters)
 
-    {:ok,
-     %Tag.Page{
-       tags: tags,
-       pagination:
-         Lilac.Pagination.generate(Tags.count(filters), Map.get(filters, :pagination), info)
-     }}
+    {:ok, Tag.Page.generate(tags, info, filters)}
   end
 end

@@ -9,33 +9,16 @@ defmodule LilacWeb.Resolvers.Artists do
       Services.Tags.fetch_tags_for_artists(Map.get(filters, :inputs))
     end
 
-    artists = Services.Artists.list(filters)
+    artists = Services.Artists.list(filters, info)
 
-    {:ok,
-     %Artist.Page{
-       artists: artists,
-       pagination:
-         Lilac.Pagination.generate(
-           Services.Artists.count(filters),
-           Map.get(filters, :pagination),
-           info
-         )
-     }}
+    {:ok, Artist.Page.generate(artists, info, filters)}
   end
 
-  @spec list_counts(any, %{filters: Artist.Filters.t()}, Absinthe.Resolution.t()) :: {:ok, any}
+  @spec list_counts(any, %{filters: Artist.Filters.t()}, Absinthe.Resolution.t()) ::
+          {:ok, ArtistCount.Page.t()}
   def list_counts(_root, %{filters: filters}, info) do
     artist_counts = Services.Artists.list_counts(filters)
 
-    {:ok,
-     %ArtistCount.Page{
-       artist_counts: artist_counts,
-       pagination:
-         Lilac.Pagination.generate(
-           Services.Artists.count_counts(filters),
-           Map.get(filters, :pagination),
-           info
-         )
-     }}
+    {:ok, ArtistCount.Page.generate(artist_counts, info, filters)}
   end
 end

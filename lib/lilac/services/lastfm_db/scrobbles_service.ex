@@ -38,7 +38,7 @@ defmodule Lilac.Services.Scrobbles do
   @spec generate_joins(
           Ecto.Query.t(),
           Scrobble.Filters.t(),
-          Absinthe.Resolution.t(),
+          %Absinthe.Resolution{},
           boolean | nil
         ) ::
           Ecto.Query.t()
@@ -51,7 +51,7 @@ defmodule Lilac.Services.Scrobbles do
   @spec chained_maybe_join_track(
           Ecto.Query.t(),
           Scrobble.Filters.t(),
-          Absinthe.Resolution.t(),
+          %Absinthe.Resolution{},
           boolean
         ) ::
           Ecto.Query.t()
@@ -69,7 +69,7 @@ defmodule Lilac.Services.Scrobbles do
   @spec chained_maybe_join_album(
           Ecto.Query.t(),
           Scrobble.Filters.t(),
-          Absinthe.Resolution.t(),
+          %Absinthe.Resolution{},
           boolean
         ) ::
           Ecto.Query.t()
@@ -83,7 +83,7 @@ defmodule Lilac.Services.Scrobbles do
     end
   end
 
-  @spec maybe_join_artist(Ecto.Query.t(), Scrobble.Filters.t(), Absinthe.Resolution.t(), boolean) ::
+  @spec maybe_join_artist(Ecto.Query.t(), Scrobble.Filters.t(), %Absinthe.Resolution{}, boolean) ::
           Ecto.Query.t()
   defp maybe_join_artist(query, filters, info, select) do
     if Map.has_key?(filters, :artist) ||
@@ -95,7 +95,7 @@ defmodule Lilac.Services.Scrobbles do
     end
   end
 
-  @spec maybe_join_user(Ecto.Query.t(), Scrobble.Filters.t(), Absinthe.Resolution.t(), boolean) ::
+  @spec maybe_join_user(Ecto.Query.t(), Scrobble.Filters.t(), %Absinthe.Resolution{}, boolean) ::
           Ecto.Query.t()
   defp maybe_join_user(query, filters, info, select) do
     if Map.has_key?(filters, :user) ||
