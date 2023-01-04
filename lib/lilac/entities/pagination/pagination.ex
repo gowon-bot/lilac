@@ -8,7 +8,8 @@ defmodule Lilac.Pagination do
           per_page: integer
         }
 
-  @spec generate(integer, Lilac.Pagination.Input.t() | nil) :: Lilac.Pagination.t()
+  @spec generate(integer, Lilac.Pagination.Input.t() | nil) ::
+          Lilac.Pagination.t()
   def generate(count, maybe_page_input) do
     current_page = Map.get(maybe_page_input || %{}, :page, 1)
     per_page = Map.get(maybe_page_input || %{}, :per_page, count)

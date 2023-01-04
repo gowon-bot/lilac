@@ -15,6 +15,25 @@ defmodule Lilac.ArtistCount do
             artist_counts: [Lilac.ArtistCount.t()],
             pagination: Lilac.Pagination.t()
           }
+
+    @spec generate([Lilac.ArtistCount.t()], %Absinthe.Resolution{}, Lilac.ArtistCount.Filters.t()) ::
+            t()
+    def generate(artist_counts, info, filters) do
+      pagination =
+        if(Lilac.GraphQLHelpers.Introspection.requested_pagination?(info),
+          do:
+            Lilac.Pagination.generate(
+              Lilac.Services.Artists.count_counts(filters),
+              Map.get(filters, :pagination)
+            ),
+          else: %Lilac.Pagination{}
+        )
+
+      %__MODULE__{
+        artist_counts: artist_counts,
+        pagination: pagination
+      }
+    end
   end
 
   defmodule Filters do
