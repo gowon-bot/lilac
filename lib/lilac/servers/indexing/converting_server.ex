@@ -1,4 +1,4 @@
-defmodule Lilac.Servers.Converting do
+defmodule Lilac.ConvertingServer do
   use GenServer, restart: :transient
 
   alias Lilac.Converting
@@ -9,27 +9,32 @@ defmodule Lilac.Servers.Converting do
 
   # Client API
 
-  @spec convert_page(pid, Responses.RecentTracks.t(), Lilac.User.t(), pid) :: :ok
-  def convert_page(pid, page, user, indexing_progress_pid) do
-    GenServer.cast(pid, {:convert_page, {page, user, indexing_progress_pid}})
+  @spec convert_page(pid, Responses.RecentTracks.t(), Lilac.User.t()) :: :ok
+  def convert_page(pid, page, user) do
+    GenServer.cast(
+      pid,
+      {:convert_page, {page, user, Lilac.IndexingSupervisor.indexing_progress_pid(user)}}
+    )
   end
 
   # Server callbacks
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, :ok)
+  def start_link(user) do
+    GenServer.start_link(__MODULE__, %{user: user})
   end
 
   @impl true
-  @spec init(term) :: {:ok, map}
-  def init(_) do
-    {:ok, %{}}
+  @spec init(%{user: Lilac.User.t()}) :: {:ok, map}
+  def init(opts) do
+    {:ok, opts}
   end
 
   @impl true
   @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), Lilac.User.t(), pid}}, term) ::
           {:noreply, :ok}
-  def handle_cast({:convert_page, {page, user, indexing_progress_pid}}, _state) do
+  def handle_cast({:convert_page, {page, _user, indexing_progress_pid}}, state) do
+    user = state.user
+
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
     artist_map = convert_artists(scrobbles)
@@ -40,13 +45,13 @@ defmodule Lilac.Servers.Converting do
 
     counting_maps = count(scrobbles, artist_map, album_map, track_map)
 
-    :ok = Lilac.Servers.Counting.upsert(CountingServer, user, counting_maps)
+    :ok = Lilac.CountingServer.upsert(CountingServer, user, counting_maps)
 
     insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
 
-    Lilac.Servers.IndexingProgress.capture_progress(indexing_progress_pid, user, page)
+    Lilac.IndexingProgressServer.capture_progress(indexing_progress_pid, user, page)
 
-    {:noreply, %{}}
+    {:noreply, state}
   end
 
   # Helpers

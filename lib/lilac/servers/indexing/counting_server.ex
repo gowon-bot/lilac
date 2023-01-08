@@ -1,5 +1,5 @@
-defmodule Lilac.Servers.Counting do
-  use GenServer, restart: :permanent
+defmodule Lilac.CountingServer do
+  use GenServer
 
   alias Lilac.CountingMap
 
@@ -11,23 +11,23 @@ defmodule Lilac.Servers.Counting do
 
   # Server callbacks
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, :ok)
+  def start_link(user) do
+    GenServer.start_link(__MODULE__, user, name: __MODULE__)
   end
 
   @impl true
-  def init(:ok) do
-    {:ok, %{}}
+  def init(user) do
+    {:ok, %{user: user}}
   end
 
-  @impl true
-  @spec handle_cast({:upsert, {%Lilac.User{}, CountingMap.counting_maps()}}, term) ::
-          {:noreply, map}
-  def handle_cast({:upsert, {user, counting_maps}}, _state) do
-    Lilac.Counting.upsert_artist_counts(user, counting_maps.artists)
-    Lilac.Counting.upsert_album_counts(user, counting_maps.albums)
-    Lilac.Counting.upsert_track_counts(user, counting_maps.tracks)
+  # @impl true
+  # @spec handle_cast({:upsert, {%Lilac.User{}, CountingMap.counting_maps()}}, term) ::
+  #         {:noreply, map}
+  # def handle_cast({:upsert, {user, counting_maps}}, _state) do
+  #   Lilac.Counting.upsert_artist_counts(user, counting_maps.artists)
+  #   Lilac.Counting.upsert_album_counts(user, counting_maps.albums)
+  #   Lilac.Counting.upsert_track_counts(user, counting_maps.tracks)
 
-    {:noreply, %{}}
-  end
+  #   {:noreply, %{}}
+  # end
 end

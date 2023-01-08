@@ -1,25 +1,23 @@
-defmodule Lilac.Servers.Concurrency do
+defmodule Lilac.ConcurrencyServer do
   @type action :: :indexing
-
-  use GenServer, restart: :permanent
 
   # Client api
 
-  @spec register(pid | atom, action(), integer) :: no_return
-  def register(pid, action, user_id) do
+  @spec register(action(), integer) :: no_return
+  def register(action, user_id) do
     IO.puts("Registering #{user_id} as doing #{action}")
-    GenServer.call(pid, {:register, action, user_id})
+    GenServer.call(Lilac.ConcurrencyServer, {:register, action, user_id})
   end
 
-  @spec unregister(pid | atom, action(), integer) :: no_return
-  def unregister(pid, action, user_id) do
+  @spec unregister(action(), integer) :: no_return
+  def unregister(action, user_id) do
     IO.puts("Unregistering #{user_id} as doing #{action}")
-    GenServer.call(pid, {:unregister, action, user_id})
+    GenServer.call(Lilac.ConcurrencyServer, {:unregister, action, user_id})
   end
 
-  @spec is_doing_action?(pid | atom, action(), integer) :: boolean
-  def is_doing_action?(pid, action, user_id) do
-    GenServer.call(pid, {:inquire, action, user_id})
+  @spec is_doing_action?(action(), integer) :: boolean
+  def is_doing_action?(action, user_id) do
+    GenServer.call(Lilac.ConcurrencyServer, {:inquire, action, user_id})
   end
 
   # Server callbacks

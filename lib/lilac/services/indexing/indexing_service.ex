@@ -1,27 +1,27 @@
-defmodule Lilac.Indexing do
+defmodule Lilac.Services.Indexing do
   import Ecto.Query, only: [from: 2]
 
   alias Lilac.LastFM
   alias Lilac.LastFM.API.Params
   alias Lilac.LastFM.Responses
+  alias Lilac.IndexingSupervisor
 
-  @spec index(%{converting: pid, indexing_progress: pid}, %Lilac.User{}) :: no_return
-  def index(pids, user) do
+  @spec index(%Lilac.User{}) :: no_return
+  def index(user) do
     clear_data(user)
 
-    convert_pages(pids, user, %Params.RecentTracks{
+    convert_pages(user, %Params.RecentTracks{
       username: Lilac.Requestable.from_user(user),
       limit: 500
     })
   end
 
-  @spec update(%{converting: pid, indexing_progress: pid}, %Lilac.User{}) :: no_return
-  def update(pids, user) do
+  @spec update(%Lilac.User{}) :: no_return
+  def update(user) do
     if user.last_indexed == nil do
-      index(pids, user)
+      index(user)
     else
       convert_pages(
-        pids,
         user,
         %Params.RecentTracks{
           username: Lilac.Requestable.from_user(user),
@@ -33,11 +33,10 @@ defmodule Lilac.Indexing do
   end
 
   @spec convert_pages(
-          %{converting: pid, indexing_progress: pid},
           %Lilac.User{},
           %Params.RecentTracks{}
         ) :: no_return()
-  defp convert_pages(pids, user, params) do
+  defp convert_pages(user, params) do
     fetched_page = fetch_page(user, %{params | page: 1})
 
     case fetched_page do
@@ -60,7 +59,10 @@ defmodule Lilac.Indexing do
           |> Lilac.Repo.update!()
 
         Enum.each(1..total_pages, fn page_number ->
-          Lilac.Servers.IndexingProgress.add_page(pids.indexing_progress, page_number)
+          Lilac.IndexingProgressServer.add_page(
+            IndexingSupervisor.indexing_progress_pid(user),
+            page_number
+          )
         end)
 
         Lilac.Parallel.map(
@@ -72,11 +74,10 @@ defmodule Lilac.Indexing do
               {:ok, page} ->
                 IO.puts("Updating user #{user.username} with #{length(page.tracks)} scrobbles")
 
-                Lilac.Servers.Converting.convert_page(
-                  pids.converting,
+                Lilac.ConvertingServer.convert_page(
+                  IndexingSupervisor.converting_pid(user),
                   page,
-                  user,
-                  pids.indexing_progress
+                  user
                 )
 
               {:error, error} ->
@@ -94,14 +95,14 @@ defmodule Lilac.Indexing do
     # Give the client a chance to form the subscription
     Process.sleep(300)
 
-    Lilac.Servers.IndexingProgress.update_subscription(
+    Lilac.IndexingProgressServer.update_subscription(
       if(is_nil(params.from), do: :indexing, else: :updating),
       0,
       0,
       user.id
     )
 
-    Lilac.Servers.IndexingProgress.shutdown(user)
+    Lilac.IndexingProgressServer.shutdown(user)
   end
 
   @spec clear_data(%Lilac.User{}) :: no_return()

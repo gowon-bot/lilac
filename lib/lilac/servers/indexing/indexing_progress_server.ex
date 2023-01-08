@@ -1,11 +1,11 @@
-defmodule Lilac.Servers.IndexingProgress do
+defmodule Lilac.IndexingProgressServer do
   @moduledoc """
     Keeps track of indexing progress, and notifies its caller when all pages have been processed.
     Also pushes progress updates to the websocket
   """
   use GenServer, restart: :transient
 
-  alias Lilac.Servers.Concurrency
+  alias Lilac.ConcurrencyServer
 
   # Client API
 
@@ -20,8 +20,8 @@ defmodule Lilac.Servers.IndexingProgress do
 
   @spec shutdown(%Lilac.User{}) :: no_return()
   def shutdown(user) do
-    Concurrency.unregister(ConcurrencyServer, :indexing, user.id)
-    Lilac.Servers.Indexing.stop_servers(user)
+    ConcurrencyServer.unregister(:indexing, user.id)
+    Lilac.IndexingServer.stop_servers(user)
   end
 
   # Server callbacks
