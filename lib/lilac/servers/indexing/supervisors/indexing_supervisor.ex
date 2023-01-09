@@ -1,5 +1,11 @@
 defmodule Lilac.IndexingSupervisor do
-  use Supervisor, restart: :transient
+  use Supervisor
+
+  @supervised_servers [
+    Lilac.CountingServer,
+    Lilac.ConvertingServer,
+    Lilac.IndexingProgressServer
+  ]
 
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(user) do
@@ -8,15 +14,7 @@ defmodule Lilac.IndexingSupervisor do
 
   @impl true
   def init(user) do
-    Supervisor.init(
-      [
-        {Lilac.IndexingServer, user},
-        {Lilac.CountingServer, user},
-        {Lilac.ConvertingServer, user},
-        {Lilac.IndexingProgressServer, user}
-      ],
-      strategy: :one_for_one
-    )
+    Supervisor.init([{Lilac.IndexingServer, user}], strategy: :one_for_one)
   end
 
   def index(user) do
@@ -29,6 +27,18 @@ defmodule Lilac.IndexingSupervisor do
     pid = indexing_pid(user)
 
     Lilac.IndexingServer.update_user(pid, user)
+  end
+
+  def spin_up_servers(user) do
+    case Lilac.IndexerRegistry.get_supervisor_pid(user) do
+      nil ->
+        nil
+
+      pid ->
+        for server <- @supervised_servers do
+          Supervisor.start_child(pid, {server, user})
+        end
+    end
   end
 
   def self_destruct(user) do

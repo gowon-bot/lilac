@@ -47,6 +47,8 @@ defmodule Lilac.Services.Indexing do
         shutdown_subscription(params, user)
 
       {:ok, page} ->
+        Lilac.IndexingSupervisor.spin_up_servers(user)
+
         total_pages = page.meta.total_pages
 
         first_scrobble =
