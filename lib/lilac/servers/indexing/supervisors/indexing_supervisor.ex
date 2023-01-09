@@ -1,5 +1,4 @@
 defmodule Lilac.IndexingSupervisor do
-  alias Lilac.IndexingSupervisor
   use Supervisor
 
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
@@ -21,7 +20,7 @@ defmodule Lilac.IndexingSupervisor do
   end
 
   def index(user) do
-    pid = IndexingSupervisor.indexing_pid(user)
+    pid = indexing_pid(user)
 
     Lilac.IndexingServer.index_user(pid, user)
   end
