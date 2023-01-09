@@ -1,14 +1,16 @@
 defmodule LilacWeb.Resolvers.User do
+  import Ecto.Query, only: [from: 2]
+
   alias Lilac.Services.Auth
   alias Lilac.GraphQLHelpers.{Introspection, Fields}
-  import Ecto.Query, only: [from: 2]
+  alias Lilac.Indexer
 
   def index(_root, %{user: user_input}, %{context: context}) do
     user = Lilac.Repo.get_by!(Lilac.User, user_input)
 
     if !Auth.is_authorized?(context, user),
       do: Lilac.Errors.Meta.doughnut_id_doesnt_match(),
-      else: Lilac.IndexingServer.index_user(user)
+      else: Indexer.index(user)
   end
 
   def update(_root, %{user: user_input}, %{context: context}) do
@@ -16,7 +18,7 @@ defmodule LilacWeb.Resolvers.User do
 
     if !Auth.is_authorized?(context, user),
       do: Lilac.Errors.Meta.doughnut_id_doesnt_match(),
-      else: Lilac.IndexingServer.update_user(user)
+      else: Indexer.update(user)
   end
 
   def users(_root, %{filters: user_input}, info) do
