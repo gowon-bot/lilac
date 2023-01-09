@@ -1,5 +1,5 @@
 defmodule Lilac.ConvertingServer do
-  use GenServer, restart: :transient
+  use GenServer
 
   alias Lilac.Converting
   alias Lilac.{ConversionMap, CountingMap}

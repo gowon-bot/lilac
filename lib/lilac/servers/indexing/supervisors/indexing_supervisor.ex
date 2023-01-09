@@ -1,5 +1,5 @@
 defmodule Lilac.IndexingSupervisor do
-  use Supervisor
+  use Supervisor, restart: :transient
 
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(user) do
@@ -27,6 +27,10 @@ defmodule Lilac.IndexingSupervisor do
 
   def update(_user) do
     IO.puts("updating....")
+  end
+
+  def self_destruct(user) do
+    Lilac.Indexer.terminate_child(user)
   end
 
   def indexing_pid(user) do

@@ -39,4 +39,15 @@ defmodule Lilac.Indexer do
       start: {Lilac.IndexingSupervisor, :start_link, [user]}
     })
   end
+
+  def terminate_child(user) do
+    case Lilac.IndexerRegistry.get_supervisor_pid(user) do
+      nil -> nil
+      pid -> DynamicSupervisor.terminate_child(__MODULE__, pid)
+    end
+  end
 end
+
+# user = Lilac.Repo.get_by!(Lilac.User, %{id: 1})
+# Lilac.Indexer.index(user)
+# Lilac.Indexer.start_child(user)
