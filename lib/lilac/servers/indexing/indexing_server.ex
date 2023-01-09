@@ -50,7 +50,7 @@ defmodule Lilac.IndexingServer do
   ## Server callbacks
 
   @impl true
-  @spec handle_cast({:index, Lilac.User.t()}, term) :: {:noreply, nil}
+  # @spec handle_cast({:index, Lilac.User.t()}, term) :: {:noreply, nil}
   def handle_cast({:index, user}, _state) do
     Indexing.index(user)
 

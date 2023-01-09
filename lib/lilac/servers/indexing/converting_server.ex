@@ -32,8 +32,8 @@ defmodule Lilac.ConvertingServer do
   @impl true
   @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), Lilac.User.t(), pid}}, term) ::
           {:noreply, :ok}
-  def handle_cast({:convert_page, {page, _user, indexing_progress_pid}}, state) do
-    user = state.user
+  def handle_cast({:convert_page, {page, user, indexing_progress_pid}}, state) do
+    # user = state.user
 
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
@@ -111,7 +111,7 @@ defmodule Lilac.ConvertingServer do
     maps
   end
 
-  @spec insert_scrobbles(scrobbles_type, map, map, map, %Lilac.User{}) :: no_return()
+  @spec insert_scrobbles(scrobbles_type, map, map, map, Lilac.User.t()) :: no_return()
   def insert_scrobbles(scrobbles, artist_map, album_map, track_map, user) do
     converted_scrobbles =
       Enum.map(scrobbles, fn scrobble ->

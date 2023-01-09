@@ -5,6 +5,11 @@ defmodule Lilac.IndexerRegistry do
 
   def get_supervisor_pid(user) do
     Registry.lookup(Lilac.IndexerRegistry, registry_key(user))
+    |> Enum.at(0)
+    |> case do
+      {pid, nil} -> pid
+      nil -> nil
+    end
   end
 
   defp registry_key(user) do

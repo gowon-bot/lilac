@@ -18,8 +18,8 @@ defmodule Lilac.Application do
       # Start the Endpoint (http/https)
       LilacWeb.Endpoint,
       {Absinthe.Subscription, LilacWeb.Endpoint},
-      # Start the ConcurrencyServer
-      # Lilac.ConcurrencyServer,
+      # Start the concurrency server
+      Lilac.ConcurrencyServer,
 
       # Start the indexer
       Lilac.Indexer

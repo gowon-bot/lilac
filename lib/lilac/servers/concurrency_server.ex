@@ -1,4 +1,6 @@
 defmodule Lilac.ConcurrencyServer do
+  use GenServer
+
   @type action :: :indexing
 
   # Client api
@@ -23,7 +25,7 @@ defmodule Lilac.ConcurrencyServer do
   # Server callbacks
 
   def start_link(_) do
-    GenServer.start_link(__MODULE__, :ok)
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   @impl true

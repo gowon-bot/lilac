@@ -1,4 +1,5 @@
 defmodule Lilac.IndexingSupervisor do
+  alias Lilac.IndexingSupervisor
   use Supervisor
 
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
@@ -19,8 +20,14 @@ defmodule Lilac.IndexingSupervisor do
     )
   end
 
-  def index(_pid, _user) do
-    IO.puts("indexing....")
+  def index(user) do
+    pid = IndexingSupervisor.indexing_pid(user)
+
+    Lilac.IndexingServer.index_user(pid, user)
+  end
+
+  def update(_user) do
+    IO.puts("updating....")
   end
 
   def indexing_pid(user) do
@@ -46,7 +53,7 @@ defmodule Lilac.IndexingSupervisor do
 
       pid ->
         Supervisor.which_children(pid)
-        |> Enum.find(fn {id} -> id == server_name end)
+        |> Enum.find(fn child -> child |> elem(0) == server_name end)
         |> elem(1)
     end
   end
