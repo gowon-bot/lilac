@@ -25,8 +25,10 @@ defmodule Lilac.IndexingSupervisor do
     Lilac.IndexingServer.index_user(pid, user)
   end
 
-  def update(_user) do
-    IO.puts("updating....")
+  def update(user) do
+    pid = indexing_pid(user)
+
+    Lilac.IndexingServer.update_user(pid, user)
   end
 
   def self_destruct(user) do

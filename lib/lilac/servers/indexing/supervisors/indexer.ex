@@ -49,5 +49,5 @@ defmodule Lilac.Indexer do
 end
 
 # user = Lilac.Repo.get_by!(Lilac.User, %{id: 1})
-# Lilac.Indexer.index(user)
+# Lilac.Indexer.update(user)
 # Lilac.Indexer.start_child(user)

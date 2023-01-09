@@ -56,6 +56,13 @@ defmodule Lilac.IndexingServer do
     {:noreply, nil}
   end
 
+  @impl true
+  def handle_cast({:update, user}, _state) do
+    Indexing.update(user)
+
+    {:noreply, nil}
+  end
+
   @spec stop_servers(Lilac.User.t()) :: no_return
   def stop_servers(user) do
     Lilac.IndexingSupervisor.self_destruct(user)
