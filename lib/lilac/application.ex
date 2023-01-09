@@ -8,7 +8,6 @@ defmodule Lilac.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      {Registry, keys: :unique, name: Lilac.IndexerRegistry},
       # Start the Ecto repository
       Lilac.Repo,
       # Start the Telemetry supervisor
@@ -20,6 +19,9 @@ defmodule Lilac.Application do
       {Absinthe.Subscription, LilacWeb.Endpoint},
       # Start the concurrency server
       Lilac.ConcurrencyServer,
+
+      # Start the indexer registry
+      {Registry, keys: :unique, name: Lilac.IndexerRegistry},
 
       # Start the indexer
       Lilac.Indexer

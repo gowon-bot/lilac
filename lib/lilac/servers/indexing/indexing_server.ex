@@ -1,6 +1,7 @@
 defmodule Lilac.IndexingServer do
   use GenServer
 
+  alias Lilac.IndexingSupervisor
   alias Lilac.ConcurrencyServer
   alias Lilac.Services.Indexing
 
@@ -13,10 +14,13 @@ defmodule Lilac.IndexingServer do
     {:ok, %{user: user}}
   end
 
-  def index_user(pid, user) do
+  @spec index_user(Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
+  def index_user(user) do
+    pid = IndexingSupervisor.indexing_pid(user)
+
     case handle_concurrency(user.id) do
       {:ok, _} ->
-        GenServer.cast(pid, {:index, user})
+        GenServer.cast(pid, {:index})
         {:ok, nil}
 
       error ->
@@ -24,11 +28,13 @@ defmodule Lilac.IndexingServer do
     end
   end
 
-  @spec update_user(pid | atom, Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
-  def update_user(pid, user) do
+  @spec update_user(Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
+  def update_user(user) do
+    pid = IndexingSupervisor.indexing_pid(user)
+
     case handle_concurrency(user.id) do
       {:ok, _} ->
-        GenServer.cast(pid, {:update, user})
+        GenServer.cast(pid, {:update})
         {:ok, nil}
 
       error ->
@@ -50,21 +56,16 @@ defmodule Lilac.IndexingServer do
 
   ## Server callbacks
   @impl true
-  def handle_cast({:index, user}, _state) do
+  def handle_cast({:index}, %{user: user}) do
     Indexing.index(user)
 
-    {:noreply, nil}
+    {:noreply, %{user: user}}
   end
 
   @impl true
-  def handle_cast({:update, user}, _state) do
+  def handle_cast({:update}, %{user: user}) do
     Indexing.update(user)
 
-    {:noreply, nil}
-  end
-
-  @spec stop_servers(Lilac.User.t()) :: no_return
-  def stop_servers(user) do
-    Lilac.IndexingSupervisor.self_destruct(user)
+    {:noreply, %{user: user}}
   end
 end

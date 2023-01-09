@@ -8,7 +8,7 @@ defmodule LilacWeb.Resolvers.User do
 
     if !Auth.is_authorized?(context, user),
       do: Lilac.Errors.Meta.doughnut_id_doesnt_match(),
-      else: Lilac.IndexingServer.index_user(IndexingServer, user)
+      else: Lilac.IndexingServer.index_user(user)
   end
 
   def update(_root, %{user: user_input}, %{context: context}) do
@@ -16,7 +16,7 @@ defmodule LilacWeb.Resolvers.User do
 
     if !Auth.is_authorized?(context, user),
       do: Lilac.Errors.Meta.doughnut_id_doesnt_match(),
-      else: Lilac.IndexingServer.update_user(IndexingServer, user)
+      else: Lilac.IndexingServer.update_user(user)
   end
 
   def users(_root, %{filters: user_input}, info) do

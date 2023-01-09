@@ -1,47 +1,41 @@
 defmodule Lilac.IndexingSupervisor do
+  alias Lilac.ConcurrencyServer
   use Supervisor
-
-  @supervised_servers [
-    Lilac.CountingServer,
-    Lilac.ConvertingServer,
-    Lilac.IndexingProgressServer
-  ]
 
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(user) do
-    Supervisor.start_link(__MODULE__, nil, name: Lilac.IndexerRegistry.process_name(user))
+    Supervisor.start_link(__MODULE__, user, name: Lilac.IndexerRegistry.process_name(user))
   end
 
   @impl true
+  @spec init(Lilac.User.t()) :: no_return
   def init(user) do
     Supervisor.init([{Lilac.IndexingServer, user}], strategy: :one_for_one)
   end
 
   def index(user) do
-    pid = indexing_pid(user)
-
-    Lilac.IndexingServer.index_user(pid, user)
+    Lilac.IndexingServer.index_user(user)
   end
 
   def update(user) do
-    pid = indexing_pid(user)
-
-    Lilac.IndexingServer.update_user(pid, user)
+    Lilac.IndexingServer.update_user(user)
   end
 
-  def spin_up_servers(user) do
+  @spec spin_up_servers(Lilac.User.t(), ConcurrencyServer.action()) :: no_return()
+  def spin_up_servers(user, action) do
     case Lilac.IndexerRegistry.get_supervisor_pid(user) do
       nil ->
         nil
 
       pid ->
-        for server <- @supervised_servers do
-          Supervisor.start_child(pid, {server, user})
-        end
+        Supervisor.start_child(pid, {Lilac.CountingServer, user})
+        Supervisor.start_child(pid, {Lilac.ConvertingServer, user})
+        Supervisor.start_child(pid, {Lilac.IndexingProgressServer, {action, user}})
     end
   end
 
   def self_destruct(user) do
+    Lilac.ConcurrencyServer.unregister(:indexing, user.id)
     Lilac.Indexer.terminate_child(user)
   end
 

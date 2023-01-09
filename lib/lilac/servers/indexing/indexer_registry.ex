@@ -1,4 +1,8 @@
 defmodule Lilac.IndexerRegistry do
+  @moduledoc """
+  Maps user ids to IndexingSupervisor processes
+  """
+
   def process_name(user) do
     {:via, Registry, {Lilac.IndexerRegistry, registry_key(user)}}
   end

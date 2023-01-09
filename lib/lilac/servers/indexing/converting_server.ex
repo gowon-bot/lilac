@@ -9,32 +9,31 @@ defmodule Lilac.ConvertingServer do
 
   # Client API
 
-  @spec convert_page(pid, Responses.RecentTracks.t(), Lilac.User.t()) :: :ok
-  def convert_page(pid, page, user) do
-    GenServer.cast(
-      pid,
-      {:convert_page, {page, user, Lilac.IndexingSupervisor.indexing_progress_pid(user)}}
-    )
+  @spec convert_page(Lilac.User.t(), Responses.RecentTracks.t()) :: :ok
+  def convert_page(user, page) do
+    pid = Lilac.IndexingSupervisor.converting_pid(user)
+
+    GenServer.cast(pid, {:convert_page, {page}})
   end
 
   # Server callbacks
 
   def start_link(user) do
-    GenServer.start_link(__MODULE__, %{user: user})
+    GenServer.start_link(__MODULE__, user)
   end
 
   @impl true
-  @spec init(%{user: Lilac.User.t()}) :: {:ok, map}
-  def init(opts) do
-    {:ok, opts}
+  @spec init(Lilac.User.t()) :: {:ok, map}
+  def init(user) do
+    {:ok, %{user: user}}
   end
 
   @impl true
-  @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), Lilac.User.t(), pid}}, term) ::
+  @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), Lilac.User.t(), pid}}, %{
+          user: Lilac.User.t()
+        }) ::
           {:noreply, :ok}
-  def handle_cast({:convert_page, {page, user, indexing_progress_pid}}, state) do
-    # user = state.user
-
+  def handle_cast({:convert_page, {page}}, %{user: user}) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
     artist_map = convert_artists(scrobbles)
@@ -45,13 +44,13 @@ defmodule Lilac.ConvertingServer do
 
     counting_maps = count(scrobbles, artist_map, album_map, track_map)
 
-    :ok = Lilac.CountingServer.upsert(CountingServer, user, counting_maps)
+    :ok = Lilac.CountingServer.upsert(user, counting_maps)
 
     insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
 
-    Lilac.IndexingProgressServer.capture_progress(indexing_progress_pid, user, page)
+    Lilac.IndexingProgressServer.capture_progress(user, page)
 
-    {:noreply, state}
+    {:noreply, %{user: user}}
   end
 
   # Helpers
