@@ -5,8 +5,11 @@ defmodule Lilac.CountingServer do
 
   # Client api
 
-  def upsert(user, counting_maps) do
-    GenServer.cast(Lilac.IndexerRegistry.counting_server_name(user), {:upsert, {counting_maps}})
+  def upsert(user, counting_maps, recent_tracks_page) do
+    GenServer.cast(
+      Lilac.IndexerRegistry.counting_server_name(user),
+      {:upsert, {counting_maps, recent_tracks_page}}
+    )
   end
 
   # Server callbacks
@@ -17,17 +20,22 @@ defmodule Lilac.CountingServer do
 
   @impl true
   def init(user) do
-    {:ok, %{user: user}}
+    {:ok, %{user: user, pages: 0}}
   end
 
   @impl true
-  @spec handle_cast({:upsert, {CountingMap.counting_maps()}}, %{user: Lilac.User.t()}) ::
+  @spec handle_cast(
+          {:upsert, {CountingMap.counting_maps(), Lilac.LastFM.Responses.RecentTracks.t()}},
+          %{user: Lilac.User.t()}
+        ) ::
           {:noreply, map}
-  def handle_cast({:upsert, {counting_maps}}, %{user: user}) do
+  def handle_cast({:upsert, {counting_maps, recent_tracks_page}}, %{user: user, pages: pages}) do
     Lilac.Counting.upsert_artist_counts(user, counting_maps.artists)
     Lilac.Counting.upsert_album_counts(user, counting_maps.albums)
     Lilac.Counting.upsert_track_counts(user, counting_maps.tracks)
 
-    {:noreply, %{user: user}}
+    Lilac.IndexingProgressServer.capture_progress(user, recent_tracks_page)
+
+    {:noreply, %{user: user, pages: pages + 1}}
   end
 end

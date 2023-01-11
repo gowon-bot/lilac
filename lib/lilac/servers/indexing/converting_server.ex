@@ -44,11 +44,9 @@ defmodule Lilac.ConvertingServer do
 
     counting_maps = count(scrobbles, artist_map, album_map, track_map)
 
-    :ok = Lilac.CountingServer.upsert(user, counting_maps)
-
     insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
 
-    Lilac.IndexingProgressServer.capture_progress(user, page)
+    :ok = Lilac.CountingServer.upsert(user, counting_maps, page)
 
     {:noreply, %{user: user}}
   end
