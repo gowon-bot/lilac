@@ -1,5 +1,5 @@
 defmodule Lilac.Services.Users do
-  alias Lilac.ConcurrencyServer
+  alias Lilac.Services.Concurrency
   alias Lilac.User
 
   @spec add_is_indexing([Lilac.User.t()]) :: [Lilac.User.t()]
@@ -8,7 +8,7 @@ defmodule Lilac.Services.Users do
     |> Enum.map(fn user ->
       %User{
         user
-        | is_indexing: ConcurrencyServer.is_doing_action?(:indexing, user.id)
+        | is_indexing: Concurrency.is_user_indexing?(user)
       }
     end)
   end

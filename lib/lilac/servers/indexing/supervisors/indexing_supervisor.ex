@@ -1,8 +1,9 @@
 defmodule Lilac.IndexingSupervisor do
   use Supervisor
 
-  alias Lilac.ConcurrencyServer
   alias Lilac.IndexerRegistry
+
+  @type action :: :indexing
 
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(user) do
@@ -31,7 +32,7 @@ defmodule Lilac.IndexingSupervisor do
     Lilac.IndexingServer.update_user(user)
   end
 
-  @spec spin_up_servers(Lilac.User.t(), ConcurrencyServer.action()) :: no_return()
+  @spec spin_up_servers(Lilac.User.t(), action()) :: no_return()
   def spin_up_servers(user, action) do
     name = IndexerRegistry.indexing_supervisor_name(user)
 
@@ -56,7 +57,6 @@ defmodule Lilac.IndexingSupervisor do
   end
 
   def self_destruct(user) do
-    Lilac.ConcurrencyServer.unregister(:indexing, user.id)
     Lilac.Indexer.terminate_child(user)
   end
 end

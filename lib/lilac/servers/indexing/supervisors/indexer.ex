@@ -26,7 +26,7 @@ defmodule Lilac.Indexer do
         index_or_update_function.(user)
 
       {:error, {:already_started, _pid}} ->
-        index_or_update_function.(user)
+        Lilac.Errors.Indexing.user_already_indexing()
 
       _ ->
         Lilac.Errors.Meta.unknown_server_error()

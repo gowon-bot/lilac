@@ -17,8 +17,6 @@ defmodule Lilac.Application do
       # Start the Endpoint (http/https)
       LilacWeb.Endpoint,
       {Absinthe.Subscription, LilacWeb.Endpoint},
-      # Start the concurrency server
-      Lilac.ConcurrencyServer,
 
       # Start the indexer registry
       {Registry, keys: :unique, name: Lilac.IndexerRegistry},

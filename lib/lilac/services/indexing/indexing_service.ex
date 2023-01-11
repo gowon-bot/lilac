@@ -1,7 +1,6 @@
 defmodule Lilac.Services.Indexing do
   import Ecto.Query, only: [from: 2]
 
-  alias Lilac.ConcurrencyServer
   alias Lilac.LastFM
   alias Lilac.LastFM.API.Params
   alias Lilac.LastFM.Responses
@@ -40,7 +39,7 @@ defmodule Lilac.Services.Indexing do
   @spec convert_pages(
           %Lilac.User{},
           %Params.RecentTracks{},
-          ConcurrencyServer.action()
+          Lilac.IndexingSupervisor.action()
         ) :: no_return()
   defp convert_pages(user, params, action) do
     fetched_page = fetch_page(user, %{params | page: 1})

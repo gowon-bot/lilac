@@ -1,5 +1,5 @@
 defmodule Lilac.InputParser.Artist do
-  import Ecto.Query, only: [where: 3, from: 2, select: 3, join: 5]
+  import Ecto.Query, only: [where: 3, from: 2, select: 3]
 
   alias Lilac.InputParser
   alias Ecto.Query

@@ -2,7 +2,6 @@ defmodule Lilac.IndexingServer do
   use GenServer
 
   alias Lilac.IndexerRegistry
-  alias Lilac.ConcurrencyServer
   alias Lilac.Services.Indexing
 
   def start_link(user) do
@@ -16,38 +15,14 @@ defmodule Lilac.IndexingServer do
 
   @spec index_user(Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
   def index_user(user) do
-    case handle_concurrency(user.id) do
-      {:ok, _} ->
-        GenServer.cast(IndexerRegistry.indexing_server_name(user), {:index})
-        {:ok, nil}
-
-      error ->
-        error
-    end
+    GenServer.cast(IndexerRegistry.indexing_server_name(user), {:index})
+    {:ok, nil}
   end
 
   @spec update_user(Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
   def update_user(user) do
-    case handle_concurrency(user.id) do
-      {:ok, _} ->
-        GenServer.cast(IndexerRegistry.indexing_server_name(user), {:update})
-        {:ok, nil}
-
-      error ->
-        error
-    end
-  end
-
-  @spec handle_concurrency(integer) :: {:ok, nil} | {:error, String.t()}
-  defp handle_concurrency(user_id) do
-    user_doing_action = ConcurrencyServer.is_doing_action?(:indexing, user_id)
-
-    if !user_doing_action do
-      ConcurrencyServer.register(:indexing, user_id)
-      {:ok, nil}
-    else
-      Lilac.Errors.Indexing.user_already_indexing()
-    end
+    GenServer.cast(IndexerRegistry.indexing_server_name(user), {:update})
+    {:ok, nil}
   end
 
   ## Server callbacks
