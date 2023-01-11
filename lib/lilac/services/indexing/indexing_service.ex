@@ -16,7 +16,7 @@ defmodule Lilac.Services.Indexing do
         username: Lilac.Requestable.from_user(user),
         limit: 500
       },
-      :index
+      :indexing
     )
   end
 
@@ -32,7 +32,7 @@ defmodule Lilac.Services.Indexing do
           limit: 500,
           from: DateTime.to_unix(user.last_indexed) + 1
         },
-        :update
+        :updating
       )
     end
   end
@@ -77,8 +77,6 @@ defmodule Lilac.Services.Indexing do
 
             case fetched_page do
               {:ok, page} ->
-                IO.puts("Updating user #{user.username} with #{length(page.tracks)} scrobbles")
-
                 Lilac.ConvertingServer.convert_page(
                   user,
                   page

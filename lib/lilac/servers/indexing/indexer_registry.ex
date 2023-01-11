@@ -3,12 +3,12 @@ defmodule Lilac.IndexerRegistry do
   Maps user ids to IndexingSupervisor processes
   """
 
-  def process_name(user) do
-    {:via, Registry, {Lilac.IndexerRegistry, registry_key(user)}}
+  def process_name(user, process) do
+    {:via, Registry, {Lilac.IndexerRegistry, process.(user)}}
   end
 
-  def get_supervisor_pid(user) do
-    Registry.lookup(Lilac.IndexerRegistry, registry_key(user))
+  def get_pid(user, process) do
+    Registry.lookup(Lilac.IndexerRegistry, process.(user))
     |> Enum.at(0)
     |> case do
       {pid, nil} -> pid
@@ -16,7 +16,11 @@ defmodule Lilac.IndexerRegistry do
     end
   end
 
-  defp registry_key(user) do
-    "#{user.id}"
-  end
+  def indexing_supervisor_name(user), do: via_tuple("supervisor-#{user.id}")
+  def indexing_server_name(user), do: via_tuple("indexing-#{user.id}")
+  def counting_server_name(user), do: via_tuple("counting-#{user.id}")
+  def converting_server_name(user), do: via_tuple("converting-#{user.id}")
+  def indexing_progress_server_name(user), do: via_tuple("indexing-progress-#{user.id}")
+
+  defp via_tuple(name), do: {:via, Registry, {Lilac.IndexerRegistry, name}}
 end

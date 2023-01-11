@@ -1,12 +1,12 @@
 defmodule Lilac.IndexingServer do
   use GenServer
 
-  alias Lilac.IndexingSupervisor
+  alias Lilac.IndexerRegistry
   alias Lilac.ConcurrencyServer
   alias Lilac.Services.Indexing
 
   def start_link(user) do
-    GenServer.start_link(__MODULE__, user, name: __MODULE__)
+    GenServer.start_link(__MODULE__, user, name: IndexerRegistry.indexing_server_name(user))
   end
 
   @impl true
@@ -16,11 +16,9 @@ defmodule Lilac.IndexingServer do
 
   @spec index_user(Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
   def index_user(user) do
-    pid = IndexingSupervisor.indexing_pid(user)
-
     case handle_concurrency(user.id) do
       {:ok, _} ->
-        GenServer.cast(pid, {:index})
+        GenServer.cast(IndexerRegistry.indexing_server_name(user), {:index})
         {:ok, nil}
 
       error ->
@@ -30,11 +28,9 @@ defmodule Lilac.IndexingServer do
 
   @spec update_user(Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
   def update_user(user) do
-    pid = IndexingSupervisor.indexing_pid(user)
-
     case handle_concurrency(user.id) do
       {:ok, _} ->
-        GenServer.cast(pid, {:update})
+        GenServer.cast(IndexerRegistry.indexing_server_name(user), {:update})
         {:ok, nil}
 
       error ->

@@ -1,5 +1,6 @@
 defmodule Lilac.Indexer do
   use DynamicSupervisor
+  alias Lilac.IndexerRegistry
 
   def start_link(_) do
     DynamicSupervisor.start_link(__MODULE__, nil, name: __MODULE__)
@@ -28,7 +29,7 @@ defmodule Lilac.Indexer do
         index_or_update_function.(user)
 
       _ ->
-        nil
+        Lilac.Errors.Meta.unknown_server_error()
     end
   end
 
@@ -41,13 +42,9 @@ defmodule Lilac.Indexer do
   end
 
   def terminate_child(user) do
-    case Lilac.IndexerRegistry.get_supervisor_pid(user) do
+    case GenServer.whereis(IndexerRegistry.indexing_supervisor_name(user)) do
       nil -> nil
       pid -> DynamicSupervisor.terminate_child(__MODULE__, pid)
     end
   end
 end
-
-# user = Lilac.Repo.get_by!(Lilac.User, %{id: 1})
-# Lilac.Indexer.index(user)
-# Lilac.Indexer.start_child(user)

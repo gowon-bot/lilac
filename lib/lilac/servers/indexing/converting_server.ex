@@ -11,15 +11,15 @@ defmodule Lilac.ConvertingServer do
 
   @spec convert_page(Lilac.User.t(), Responses.RecentTracks.t()) :: :ok
   def convert_page(user, page) do
-    pid = Lilac.IndexingSupervisor.converting_pid(user)
-
-    GenServer.cast(pid, {:convert_page, {page}})
+    GenServer.cast(Lilac.IndexerRegistry.converting_server_name(user), {:convert_page, {page}})
   end
 
   # Server callbacks
 
   def start_link(user) do
-    GenServer.start_link(__MODULE__, user)
+    GenServer.start_link(__MODULE__, user,
+      name: Lilac.IndexerRegistry.converting_server_name(user)
+    )
   end
 
   @impl true

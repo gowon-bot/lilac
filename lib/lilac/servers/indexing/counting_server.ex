@@ -6,15 +6,13 @@ defmodule Lilac.CountingServer do
   # Client api
 
   def upsert(user, counting_maps) do
-    pid = Lilac.IndexingSupervisor.couting_pid(user)
-
-    GenServer.cast(pid, {:upsert, {counting_maps}})
+    GenServer.cast(Lilac.IndexerRegistry.counting_server_name(user), {:upsert, {counting_maps}})
   end
 
   # Server callbacks
 
   def start_link(user) do
-    GenServer.start_link(__MODULE__, user, name: __MODULE__)
+    GenServer.start_link(__MODULE__, user, name: Lilac.IndexerRegistry.counting_server_name(user))
   end
 
   @impl true

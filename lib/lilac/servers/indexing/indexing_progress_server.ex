@@ -11,23 +11,29 @@ defmodule Lilac.IndexingProgressServer do
 
   @spec capture_progress(Lilac.User.t(), Responses.RecentTracks.t()) :: term
   def capture_progress(user, page) do
-    pid = Lilac.IndexingSupervisor.indexing_progress_pid(user)
-
-    GenServer.call(pid, {:capture_progress, page})
+    GenServer.call(
+      Lilac.IndexerRegistry.indexing_progress_server_name(user),
+      {:capture_progress, page}
+    )
   end
 
   @spec add_page(Lilac.User.t(), integer()) :: term
   def add_page(user, page_number) do
-    pid = Lilac.IndexingSupervisor.indexing_progress_pid(user)
-
-    GenServer.call(pid, {:add_page, page_number})
+    GenServer.call(
+      Lilac.IndexerRegistry.indexing_progress_server_name(user),
+      {:add_page, page_number}
+    )
   end
 
   # Server callbacks
 
   @spec start_link({:indexing | :updating, Lilac.User.t()}) :: term
   def start_link({action, user}) do
-    GenServer.start_link(__MODULE__, {action, user})
+    GenServer.start_link(
+      __MODULE__,
+      {action, user},
+      name: Lilac.IndexerRegistry.indexing_progress_server_name(user)
+    )
   end
 
   @impl true
