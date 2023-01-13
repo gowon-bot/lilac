@@ -10,6 +10,11 @@ defmodule Lilac.Converting do
   # Artists
 
   @spec convert_artists([String.t()]) :: map
+  def convert_artists([]) do
+    %{}
+  end
+
+  @spec convert_artists([String.t()]) :: map
   def convert_artists(artists) do
     artist_map = generate_artist_map(artists)
 
@@ -60,6 +65,18 @@ defmodule Lilac.Converting do
   end
 
   # Albums
+
+  @spec convert_albums([Album.raw()]) :: map
+  def convert_albums([]) do
+    %{}
+  end
+
+  @spec convert_albums(map, [Album.raw()]) :: map
+  def convert_albums(artist_map, albums) do
+    album_map = generate_album_map(artist_map, albums)
+
+    create_missing_albums(artist_map, album_map, albums)
+  end
 
   @spec generate_album_map(map, [Album.raw()]) :: map
   def generate_album_map(artist_map, albums) do
@@ -122,6 +139,18 @@ defmodule Lilac.Converting do
 
   # Tracks
 
+  @spec convert_tracks([Track.raw()]) :: map
+  def convert_tracks([]) do
+    %{}
+  end
+
+  @spec convert_tracks(map, map, [Track.raw()]) :: map
+  def convert_tracks(artist_map, album_map, tracks) do
+    track_map = generate_track_map(artist_map, album_map, tracks)
+
+    create_missing_tracks(artist_map, album_map, track_map, tracks)
+  end
+
   @spec generate_track_map(map, map, [Track.raw()]) :: map
   def generate_track_map(artist_map, album_map, tracks) do
     tracks =
@@ -129,12 +158,16 @@ defmodule Lilac.Converting do
       |> Enum.uniq()
       |> Enum.map(fn track -> raw_track_to_queryable(track, artist_map, album_map) end)
 
-    tracks =
-      from(l in Track)
-      |> Lilac.Database.CustomFunctions.tracks_in(tracks)
-      |> Lilac.Repo.all()
+    unless Enum.empty?(tracks) do
+      tracks =
+        from(l in Track)
+        |> Lilac.Database.CustomFunctions.tracks_in(tracks)
+        |> Lilac.Repo.all()
 
-    add_tracks_to_conversion_map(tracks)
+      add_tracks_to_conversion_map(tracks)
+    else
+      %{}
+    end
   end
 
   @spec create_missing_tracks(map, map, map, [Track.raw()]) :: map

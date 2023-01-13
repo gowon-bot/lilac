@@ -42,12 +42,7 @@ defmodule Lilac.ConversionMap do
 
   @spec get_nested(map, [conversion_key]) :: integer
   def get_nested(map, keys) do
-    # If any of the keys are nil, it doesn't exist
-    if length(Enum.filter(keys, fn key -> key != nil end)) != length(keys) do
-      nil
-    else
-      get_in(map, clean_keys(keys))
-    end
+    get_in(map, clean_keys(keys))
   end
 
   @spec filter_unmapped_keys(map, [conversion_key]) :: [conversion_key]
