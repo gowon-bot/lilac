@@ -1,46 +1,52 @@
-defmodule Lilac.Servers.IndexingProgress do
+defmodule Lilac.IndexingProgressServer do
   @moduledoc """
     Keeps track of indexing progress, and notifies its caller when all pages have been processed.
     Also pushes progress updates to the websocket
   """
   use GenServer, restart: :transient
 
-  alias Lilac.Servers.Concurrency
+  alias Lilac.LastFM.Responses
 
   # Client API
 
-  @spec capture_progress(atom | pid | {atom, any} | {:via, atom, any}, any, any) :: any
-  def capture_progress(pid, user, page) do
-    GenServer.call(pid, {:capture_progress, user, page})
+  @spec capture_progress(Lilac.User.t(), Responses.RecentTracks.t()) :: term
+  def capture_progress(user, page) do
+    GenServer.call(
+      Lilac.IndexerRegistry.indexing_progress_server_name(user),
+      {:capture_progress, page}
+    )
   end
 
-  def add_page(pid, page_number) do
-    GenServer.call(pid, {:add_page, page_number})
-  end
-
-  @spec shutdown(%Lilac.User{}) :: no_return()
-  def shutdown(user) do
-    Concurrency.unregister(ConcurrencyServer, :indexing, user.id)
-    Lilac.Servers.Indexing.stop_servers(user)
+  @spec add_page(Lilac.User.t(), integer()) :: term
+  def add_page(user, page_number) do
+    GenServer.call(
+      Lilac.IndexerRegistry.indexing_progress_server_name(user),
+      {:add_page, page_number}
+    )
   end
 
   # Server callbacks
 
-  @spec start_link(:indexing | :updating) :: :ignore | {:error, any} | {:ok, pid}
-  def start_link(action) do
-    GenServer.start_link(__MODULE__, action)
+  @spec start_link({:indexing | :updating, Lilac.User.t()}) :: term
+  def start_link({action, user}) do
+    GenServer.start_link(
+      __MODULE__,
+      {action, user},
+      name: Lilac.IndexerRegistry.indexing_progress_server_name(user)
+    )
   end
 
   @impl true
-  def init(action) do
-    {:ok, %{action: action, pages: [], page_count: 0}}
+  def init({action, user}) do
+    {:ok, %{action: action, pages: [], page_count: 0, user: user}}
   end
 
   @impl true
-  def handle_call({:capture_progress, user, page}, _from, %{
+  def handle_call({:capture_progress, page}, _from, %{
         pages: pages,
         action: action,
-        page_count: page_count
+        page_count: page_count,
+        user: user
       }) do
     pages = Enum.filter(pages, fn el -> el != page.meta.page end)
 
@@ -49,19 +55,21 @@ defmodule Lilac.Servers.IndexingProgress do
     update_subscription(action, page_count, page.meta.total_pages, user.id)
 
     if page_count == page.meta.total_pages do
-      shutdown(user)
+      Lilac.IndexingSupervisor.self_destruct(user)
     end
 
-    {:reply, :ok, %{pages: pages, action: action, page_count: page_count}}
+    {:reply, :ok, %{pages: pages, action: action, page_count: page_count, user: user}}
   end
 
   @impl true
   def handle_call({:add_page, page_number}, _from, %{
         pages: pages,
         action: action,
-        page_count: page_count
+        page_count: page_count,
+        user: user
       }) do
-    {:reply, :ok, %{pages: pages ++ [page_number], action: action, page_count: page_count}}
+    {:reply, :ok,
+     %{pages: pages ++ [page_number], action: action, page_count: page_count, user: user}}
   end
 
   @spec update_subscription(:indexing | :updating, integer, integer, integer) :: no_return

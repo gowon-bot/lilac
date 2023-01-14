@@ -18,21 +18,15 @@ defmodule Lilac.Application do
       LilacWeb.Endpoint,
       {Absinthe.Subscription, LilacWeb.Endpoint},
 
-      # Supervisors
-      {Lilac.ConvertingSupervisor, name: ConvertingSupervisor}
-    ]
+      # Start the indexer registry
+      {Registry, keys: :unique, name: Lilac.IndexerRegistry},
 
-    # Start the indexing server
-    {:ok, _} = GenServer.start_link(Lilac.Servers.Indexing, :ok, name: IndexingServer)
-    # Start the counting server
-    {:ok, _} = GenServer.start_link(Lilac.Servers.Counting, :ok, name: CountingServer)
-    # Start the concurrency server
-    {:ok, _} = GenServer.start_link(Lilac.Servers.Concurrency, :ok, name: ConcurrencyServer)
+      # Start the indexer
+      Lilac.Indexer
+    ]
 
     LilacWeb.Initializer.initialize()
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Lilac.Supervisor]
     Supervisor.start_link(children, opts)
 
@@ -40,7 +34,7 @@ defmodule Lilac.Application do
   end
 
   # Tell Phoenix to update the endpoint configuration
-  # whenever the application is updated.
+  # whenever the application is updated
   @impl true
   def config_change(changed, _new, removed) do
     LilacWeb.Endpoint.config_change(changed, removed)

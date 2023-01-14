@@ -4,6 +4,10 @@ defmodule Lilac.Errors.Meta do
   end
 
   def unknown_database_error do
-    {:error, "An unknown Lilac error ocurred"}
+    {:error, "An unknown Lilac error ocurred (Database)"}
+  end
+
+  def unknown_server_error do
+    {:error, "An unknown Lilac error ocurred (OTP)"}
   end
 end

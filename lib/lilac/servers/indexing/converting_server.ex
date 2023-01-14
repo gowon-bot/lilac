@@ -1,5 +1,5 @@
-defmodule Lilac.Servers.Converting do
-  use GenServer, restart: :transient
+defmodule Lilac.ConvertingServer do
+  use GenServer
 
   alias Lilac.Converting
   alias Lilac.{ConversionMap, CountingMap}
@@ -7,73 +7,91 @@ defmodule Lilac.Servers.Converting do
 
   @typep scrobbles_type :: [Responses.RecentTracks.RecentTrack.t()]
 
+  defp cache_reset_page, do: 250
+
   # Client API
 
-  @spec convert_page(pid, Responses.RecentTracks.t(), Lilac.User.t(), pid) :: :ok
-  def convert_page(pid, page, user, indexing_progress_pid) do
-    GenServer.cast(pid, {:convert_page, {page, user, indexing_progress_pid}})
+  @spec convert_page(Lilac.User.t(), Responses.RecentTracks.t()) :: :ok
+  def convert_page(user, page) do
+    GenServer.cast(Lilac.IndexerRegistry.converting_server_name(user), {:convert_page, {page}})
   end
 
   # Server callbacks
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, :ok)
+  def start_link(user) do
+    GenServer.start_link(__MODULE__, user,
+      name: Lilac.IndexerRegistry.converting_server_name(user)
+    )
   end
 
   @impl true
-  @spec init(term) :: {:ok, map}
-  def init(_) do
-    {:ok, %{}}
+  @spec init(Lilac.User.t()) :: {:ok, map}
+  def init(user) do
+    {:ok, %{user: user, conversion_maps: blank_conversion_map_cache()}}
   end
 
   @impl true
-  @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), Lilac.User.t(), pid}}, term) ::
+  @spec handle_cast({:convert_page, {Responses.RecentTracks.t(), Lilac.User.t(), pid}}, %{
+          user: Lilac.User.t(),
+          conversion_maps: map
+        }) ::
           {:noreply, :ok}
-  def handle_cast({:convert_page, {page, user, indexing_progress_pid}}, _state) do
+  def handle_cast({:convert_page, {page}}, %{user: user, conversion_maps: conversion_maps}) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
-    artist_map = convert_artists(scrobbles)
+    # Reset the cache after x pages to stop the cache from getting too big
+    # Most users' libraries should fit within zero resets
+    conversion_maps = maybe_reset_map_cache(conversion_maps, page.meta.page)
 
-    album_map = convert_albums(artist_map, scrobbles)
+    artist_map = convert_artists(scrobbles, conversion_maps.artist)
 
-    track_map = convert_tracks(artist_map, album_map, scrobbles)
+    album_map = convert_albums(artist_map, scrobbles, conversion_maps.album)
+
+    track_map = convert_tracks(artist_map, album_map, scrobbles, conversion_maps.track)
 
     counting_maps = count(scrobbles, artist_map, album_map, track_map)
 
-    :ok = Lilac.Servers.Counting.upsert(CountingServer, user, counting_maps)
-
     insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
 
-    Lilac.Servers.IndexingProgress.capture_progress(indexing_progress_pid, user, page)
+    :ok = Lilac.CountingServer.upsert(user, counting_maps, page)
 
-    {:noreply, %{}}
+    {:noreply,
+     %{user: user, conversion_maps: %{artist: artist_map, album: album_map, track: track_map}}}
   end
 
   # Helpers
 
-  @spec convert_artists(scrobbles_type) :: map
-  def convert_artists(scrobbles) do
-    artists = Enum.map(scrobbles, fn s -> s.artist end)
+  @spec convert_artists(scrobbles_type, map) :: map
+  def convert_artists(scrobbles, existing_conversion_map) do
+    artists =
+      scrobbles
+      |> Enum.map(fn s -> s.artist end)
+      |> Enum.filter(fn a -> !ConversionMap.has?(existing_conversion_map, a) end)
 
-    Converting.convert_artists(artists)
+    Converting.convert_artists(artists) |> Map.merge(existing_conversion_map)
   end
 
-  @spec convert_albums(map, scrobbles_type) :: map
-  def convert_albums(artist_map, scrobbles) do
+  @spec convert_albums(map, scrobbles_type, map) :: map
+  def convert_albums(artist_map, scrobbles, existing_conversion_map) do
     albums =
       Enum.map(scrobbles, fn s ->
         %{}
         |> Map.put(:name, s.album)
         |> Map.put(:artist, s.artist)
       end)
+      |> Enum.filter(fn %{name: name, artist: artist} ->
+        !ConversionMap.has_nested?(existing_conversion_map, [
+          ConversionMap.get(artist_map, artist),
+          name
+        ])
+      end)
 
-    album_map = Converting.generate_album_map(artist_map, albums)
-
-    Converting.create_missing_albums(artist_map, album_map, albums)
+    Converting.convert_albums(artist_map, albums)
+    |> Map.merge(existing_conversion_map, fn _k, v1, v2 -> Map.merge(v1, v2) end)
   end
 
-  @spec convert_tracks(map, map, scrobbles_type) :: map
-  def convert_tracks(artist_map, album_map, scrobbles) do
+  @spec convert_tracks(map, map, scrobbles_type, map) :: map
+  def convert_tracks(artist_map, album_map, scrobbles, existing_conversion_map) do
     tracks =
       Enum.map(scrobbles, fn s ->
         %{}
@@ -81,10 +99,17 @@ defmodule Lilac.Servers.Converting do
         |> Map.put(:album, s.album)
         |> Map.put(:artist, s.artist)
       end)
+      |> Enum.filter(fn %{name: name, album: album, artist: artist} ->
+        artist_id = ConversionMap.get(artist_map, artist)
+        album_id = ConversionMap.get_nested(album_map, [artist_id, album])
 
-    track_map = Converting.generate_track_map(artist_map, album_map, tracks)
+        !ConversionMap.has_nested?(existing_conversion_map, [artist_id, album_id, name])
+      end)
 
-    Converting.create_missing_tracks(artist_map, album_map, track_map, tracks)
+    Converting.convert_tracks(artist_map, album_map, tracks)
+    |> Map.merge(existing_conversion_map, fn _k, v1, v2 ->
+      Map.merge(v1, v2, fn _k, v3, v4 -> Map.merge(v3, v4) end)
+    end)
   end
 
   @spec count(scrobbles_type, map, map, map) :: CountingMap.counting_maps()
@@ -106,7 +131,7 @@ defmodule Lilac.Servers.Converting do
     maps
   end
 
-  @spec insert_scrobbles(scrobbles_type, map, map, map, %Lilac.User{}) :: no_return()
+  @spec insert_scrobbles(scrobbles_type, map, map, map, Lilac.User.t()) :: no_return()
   def insert_scrobbles(scrobbles, artist_map, album_map, track_map, user) do
     converted_scrobbles =
       Enum.map(scrobbles, fn scrobble ->
@@ -124,5 +149,15 @@ defmodule Lilac.Servers.Converting do
       end)
 
     Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
+  end
+
+  defp maybe_reset_map_cache(cache, page_number) do
+    if rem(page_number, cache_reset_page()) == 0,
+      do: blank_conversion_map_cache(),
+      else: cache
+  end
+
+  defp blank_conversion_map_cache do
+    %{artist: %{}, album: %{}, track: %{}}
   end
 end
