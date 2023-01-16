@@ -1,6 +1,6 @@
 defmodule Lilac.IndexerRegistry do
   @moduledoc """
-  Maps user ids to IndexingSupervisor processes
+  Maps user ids to Indexer child processes
   """
 
   def process_name(user, process) do

@@ -47,12 +47,10 @@ defmodule Lilac.IndexingSupervisor do
         start: {Lilac.ConvertingServer, :start_link, [user]}
       })
 
-      IO.inspect(
-        Supervisor.start_child(name, %{
-          id: IndexerRegistry.indexing_progress_server_name(user),
-          start: {Lilac.IndexingProgressServer, :start_link, [{action, user}]}
-        })
-      )
+      Supervisor.start_child(name, %{
+        id: IndexerRegistry.indexing_progress_server_name(user),
+        start: {Lilac.IndexingProgressServer, :start_link, [{action, user}]}
+      })
     end
   end
 

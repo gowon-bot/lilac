@@ -76,6 +76,8 @@ defmodule Lilac.Services.Indexing do
 
             case fetched_page do
               {:ok, page} ->
+                IO.puts("Processing page #{page.meta.page} for user #{user.username}")
+
                 Lilac.ConvertingServer.convert_page(
                   user,
                   page
