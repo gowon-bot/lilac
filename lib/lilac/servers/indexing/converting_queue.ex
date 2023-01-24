@@ -49,7 +49,7 @@ defmodule Lilac.ConvertingQueue do
      %{
        queue_length: queue_length - 1,
        user: user,
-       is_suspended: maybe_suspend_or_resume_indexing(user, queue_length + 1, is_suspended)
+       is_suspended: maybe_suspend_or_resume_indexing(user, queue_length - 1, is_suspended)
      }}
   end
 
