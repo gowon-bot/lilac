@@ -94,7 +94,7 @@ defmodule Lilac.IndexingServer do
     else
       index_user(state.user)
 
-      {:ok, state}
+      {:noreply, state}
     end
   end
 

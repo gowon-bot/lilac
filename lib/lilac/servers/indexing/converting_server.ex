@@ -7,7 +7,7 @@ defmodule Lilac.ConvertingServer do
 
   @typep scrobbles_type :: [Responses.RecentTracks.RecentTrack.t()]
 
-  defp cache_reset_page, do: 250
+  defp cache_reset_page, do: 50
 
   # Client API
 
