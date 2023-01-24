@@ -35,6 +35,7 @@ defmodule Lilac.CountingServer do
     Lilac.Counting.upsert_track_counts(user, counting_maps.tracks)
 
     Lilac.IndexingProgressServer.capture_progress(user, recent_tracks_page)
+    Lilac.ConvertingQueue.decrement_queue(user)
 
     {:noreply, %{user: user, pages: pages + 1}}
   end

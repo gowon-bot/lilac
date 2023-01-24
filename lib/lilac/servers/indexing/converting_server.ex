@@ -13,6 +13,8 @@ defmodule Lilac.ConvertingServer do
 
   @spec convert_page(Lilac.User.t(), Responses.RecentTracks.t()) :: :ok
   def convert_page(user, page) do
+    Lilac.ConvertingQueue.increment_queue(user)
+
     GenServer.cast(Lilac.IndexerRegistry.converting_server_name(user), {:convert_page, {page}})
   end
 
