@@ -43,6 +43,11 @@ defmodule Lilac.IndexingSupervisor do
       })
 
       Supervisor.start_child(name, %{
+        id: IndexerRegistry.converting_queue_name(user),
+        start: {Lilac.ConvertingQueue, :start_link, [user]}
+      })
+
+      Supervisor.start_child(name, %{
         id: IndexerRegistry.converting_server_name(user),
         start: {Lilac.ConvertingServer, :start_link, [user]}
       })
