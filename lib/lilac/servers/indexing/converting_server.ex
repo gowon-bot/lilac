@@ -7,8 +7,6 @@ defmodule Lilac.ConvertingServer do
 
   @typep scrobbles_type :: [Responses.RecentTracks.RecentTrack.t()]
 
-  defp cache_reset_page, do: 50
-
   # Client API
 
   @spec convert_page(Lilac.User.t(), Responses.RecentTracks.t()) :: :ok
@@ -38,18 +36,18 @@ defmodule Lilac.ConvertingServer do
           conversion_maps: map
         }) ::
           {:noreply, :ok}
-  def handle_cast({:convert_page, {page}}, %{user: user, conversion_maps: conversion_maps}) do
+  def handle_cast({:convert_page, {page}}, %{user: user}) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
     # Reset the cache after x pages to stop the cache from getting too big
     # Most users' libraries should fit within zero resets
-    conversion_maps = maybe_reset_map_cache(conversion_maps, page.meta.page)
+    # conversion_maps = maybe_reset_map_cache(conversion_maps, page.meta.page)
 
-    artist_map = convert_artists(scrobbles, conversion_maps.artist)
+    artist_map = convert_artists(scrobbles, %{})
 
-    album_map = convert_albums(artist_map, scrobbles, conversion_maps.album)
+    album_map = convert_albums(artist_map, scrobbles, %{})
 
-    track_map = convert_tracks(artist_map, album_map, scrobbles, conversion_maps.track)
+    track_map = convert_tracks(artist_map, album_map, scrobbles, %{})
 
     counting_maps = count(scrobbles, artist_map, album_map, track_map)
 
@@ -57,8 +55,7 @@ defmodule Lilac.ConvertingServer do
 
     :ok = Lilac.CountingServer.upsert(user, counting_maps, page)
 
-    {:noreply,
-     %{user: user, conversion_maps: %{artist: artist_map, album: album_map, track: track_map}}}
+    {:noreply, %{user: user, conversion_maps: %{}}}
   end
 
   # Helpers
@@ -151,12 +148,6 @@ defmodule Lilac.ConvertingServer do
       end)
 
     Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
-  end
-
-  defp maybe_reset_map_cache(cache, page_number) do
-    if rem(page_number, cache_reset_page()) == 0,
-      do: blank_conversion_map_cache(),
-      else: cache
   end
 
   defp blank_conversion_map_cache do
