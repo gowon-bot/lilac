@@ -20,7 +20,16 @@ defmodule Lilac.GraphQLHelpers.Fields do
     def tags, do: ["artists", "tags"]
 
     defmodule Count do
-      def tags, do: ["aristCounts", "tags"]
+      def tags, do: ["artistCounts", "tags"]
+    end
+  end
+
+  defmodule Album do
+    defmodule Count do
+      def user, do: ["albumCounts", "user"]
+
+      def album, do: ["albumCounts", "album"]
+      def album_artist, do: ["albumCounts", "album", "artist"]
     end
   end
 end

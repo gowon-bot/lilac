@@ -31,6 +31,12 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.Artists.list_counts/3)
     end
 
+    field :album_counts, non_null(:album_counts_page) do
+      arg(:filters, :album_counts_filters)
+
+      resolve(&Resolvers.Albums.list_counts/3)
+    end
+
     field :tags, non_null(:tags_page) do
       arg(:filters, :tags_filters)
 

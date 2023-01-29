@@ -14,7 +14,7 @@ defmodule LilacWeb.Resolvers.Artists do
     {:ok, Artist.Page.generate(artists, info, filters)}
   end
 
-  @spec list_counts(any, %{filters: Artist.Filters.t()}, Absinthe.Resolution.t()) ::
+  @spec list_counts(any, %{filters: ArtistCount.Filters.t()}, Absinthe.Resolution.t()) ::
           {:ok, ArtistCount.Page.t()}
   def list_counts(_root, %{filters: filters}, info) do
     artist_counts = Services.Artists.list_counts(filters)

@@ -163,6 +163,11 @@ defmodule LilacWeb.Schema.Types do
     field :pagination, non_null(:pagination)
   end
 
+  object(:album_counts_page) do
+    field :album_counts, non_null(list_of(non_null(:album_count)))
+    field :pagination, non_null(:pagination)
+  end
+
   object(:tags_page) do
     field :tags, non_null(list_of(non_null(:tag)))
     field :pagination, non_null(:pagination)
@@ -244,6 +249,12 @@ defmodule LilacWeb.Schema.Types do
     field :pagination, :page_input
 
     field :fetch_tags_for_missing, :boolean
+  end
+
+  input_object :album_counts_filters do
+    field :album, :album_input
+    field :users, list_of(non_null(:user_input))
+    field :pagination, :page_input
   end
 
   input_object :tags_filters do
