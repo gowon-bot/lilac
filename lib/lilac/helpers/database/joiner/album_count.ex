@@ -2,6 +2,7 @@ defmodule Lilac.Joiner.AlbumCount do
   import Ecto.Query, only: [join: 5, select_merge: 3]
 
   alias Lilac.AlbumCount
+  alias Lilac.Scrobble
   alias Lilac.GraphQLHelpers.{Introspection, Fields}
 
   # Conditional methods
@@ -9,7 +10,7 @@ defmodule Lilac.Joiner.AlbumCount do
   @spec maybe_join_user(Ecto.Query.t(), AlbumCount.Filters.t(), %Absinthe.Resolution{}, boolean) ::
           Ecto.Query.t()
   def maybe_join_user(query, filters, info, select) do
-    if Map.has_key?(filters, :users) ||
+    if AlbumCount.Filters.has_users?(filters) ||
          Introspection.has_field?(info, Fields.Album.Count.user()) do
       query
       |> join_user(select)
@@ -26,7 +27,7 @@ defmodule Lilac.Joiner.AlbumCount do
         ) ::
           Ecto.Query.t()
   def chained_maybe_join_album_artist(query, filters, info, select) do
-    if (is_map(Map.get(filters, :album)) && Map.has_key?(filters.album, :artist)) ||
+    if Lilac.Album.Filters.has_album_artist?(filters) ||
          Introspection.has_field?(info, Fields.Album.Count.album_artist()) do
       query
       |> join_album_artist(select)
@@ -37,13 +38,13 @@ defmodule Lilac.Joiner.AlbumCount do
 
   @spec maybe_join_album(
           Ecto.Query.t(),
-          Scrobble.Filters.t(),
+          AlbumCount.Filters.t(),
           %Absinthe.Resolution{},
           boolean
         ) ::
           Ecto.Query.t()
   defp maybe_join_album(query, filters, info, select) do
-    if Map.has_key?(filters, :album) ||
+    if AlbumCount.Filters.has_album?(filters) ||
          Introspection.has_field?(info, Fields.Album.Count.album_artist()) do
       query
       |> join_album(select)

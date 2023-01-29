@@ -1,6 +1,7 @@
 defmodule Lilac.Joiner.Artist do
   import Ecto.Query, only: [join: 5, preload: 3]
 
+  alias Lilac.Artist
   alias Lilac.GraphQLHelpers.{Fields, Introspection}
 
   @spec maybe_join_tags(
@@ -11,7 +12,7 @@ defmodule Lilac.Joiner.Artist do
         ) ::
           Ecto.Query.t()
   def maybe_join_tags(query, filters, info, select) do
-    if Map.has_key?(filters, :tags) ||
+    if Artist.Filters.has_tags?(filters) ||
          Introspection.has_field?(info, Fields.Artist.tags()) ||
          Introspection.has_field?(info, Fields.Artist.Count.tags()) do
       query

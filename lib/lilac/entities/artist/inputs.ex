@@ -15,4 +15,9 @@ defmodule Lilac.Artist.Filters do
           pagination: Lilac.Pagination.Input.t() | nil,
           fetch_tags_for_missing: boolean | nil
         }
+
+  @spec has_tags?(%__MODULE__{}) :: boolean()
+  def has_tags?(filters) do
+    Map.has_key?(filters, :tags)
+  end
 end

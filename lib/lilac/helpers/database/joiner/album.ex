@@ -14,7 +14,7 @@ defmodule Lilac.Joiner.Album do
         ) ::
           Ecto.Query.t()
   def maybe_join_artist(query, filters, info, select) do
-    if Map.has_key?(Map.get(filters, :album, %{}), :artist) ||
+    if Album.Filters.has_album_artist?(filters) ||
          Introspection.has_field?(info, Fields.Album.artist()) do
       query
       |> join_artist(select)
