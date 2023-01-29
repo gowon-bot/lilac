@@ -1,10 +1,12 @@
 defmodule Lilac.InputParser.Artist do
   import Ecto.Query, only: [where: 3, from: 2, select: 3]
 
+  alias Lilac.Artist
+
   alias Lilac.InputParser
   alias Ecto.Query
 
-  @spec maybe_artist_input(Query.t(), Lilac.Artist.Input.t()) :: Query.t()
+  @spec maybe_artist_input(Query.t(), Artist.Input.t()) :: Query.t()
   def maybe_artist_input(query, input) do
     if is_nil(input) do
       query
@@ -14,7 +16,7 @@ defmodule Lilac.InputParser.Artist do
     end
   end
 
-  @spec maybe_name(Query.t(), Lilac.Artist.Input.t()) :: Query.t()
+  @spec maybe_name(Query.t(), Artist.Input.t()) :: Query.t()
   defp maybe_name(query, input) do
     if InputParser.value_not_nil(input, :name) do
       query |> where([artist: a], a.name == ^input.name)
@@ -49,7 +51,23 @@ defmodule Lilac.InputParser.Artist do
     end
   end
 
-  @spec maybe_artist_inputs(Query.t(), [Lilac.Artist.Input.t()]) :: Query.t()
+  @spec maybe_in_artist_list(Ecto.Query.t(), %Artist.Filters{}, %Lilac.Tag.Filters{}) ::
+          Ecto.Query.t()
+  def maybe_in_artist_list(query, inputs, tags) do
+    if !is_nil(inputs) || !is_nil(tags) do
+      artist_filters = %{tags: tags, inputs: inputs}
+
+      artist_ids =
+        Lilac.Services.Artists.list(artist_filters, %Absinthe.Resolution{})
+        |> Enum.map(fn a -> a.id end)
+
+      query |> where([artist_count: ac], ac.artist_id in ^artist_ids)
+    else
+      query
+    end
+  end
+
+  @spec maybe_artist_inputs(Query.t(), [Artist.Input.t()]) :: Query.t()
   def maybe_artist_inputs(query, inputs) do
     if is_nil(inputs) || length(inputs) == 0 do
       query

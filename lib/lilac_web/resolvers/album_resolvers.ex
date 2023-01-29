@@ -1,17 +1,13 @@
 defmodule LilacWeb.Resolvers.Albums do
-  import Ecto.Query, only: [from: 2, where: 3]
-
   alias Lilac.{Album, AlbumCount}
   alias Lilac.Services
 
-  def all_albums(_root, %{artist: artist_name}, _info) do
-    query = from(l in Album, preload: [:artist])
+  @spec list(any, %{filters: Album.Filters.t()}, Absinthe.Resolution.t()) ::
+          {:ok, Album.Page.t()}
+  def list(_root, %{filters: filters}, info) do
+    albums = Services.Albums.list(filters, info)
 
-    {:ok, query |> maybe_artist(artist_name) |> Lilac.Repo.all()}
-  end
-
-  def all_albums(root, _args, info) do
-    all_albums(root, %{artist: nil}, info)
+    {:ok, Album.Page.generate(albums, info, filters)}
   end
 
   @spec list_counts(any, %{filters: AlbumCount.Filters.t()}, Absinthe.Resolution.t()) ::
@@ -23,15 +19,4 @@ defmodule LilacWeb.Resolvers.Albums do
   end
 
   # Private methods
-
-  defp maybe_artist(query, nil), do: query
-
-  defp maybe_artist(query, artist_name) do
-    artist = Lilac.Repo.get_by(Lilac.Artist, name: artist_name)
-
-    unless artist == nil,
-      do: query |> where([l], l.artist_id == ^artist.id),
-      # sketchy as fuck lol
-      else: query |> where([], 1 == 0)
-  end
 end
