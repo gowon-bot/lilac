@@ -31,17 +31,22 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.Artists.list_counts/3)
     end
 
+    field :albums, non_null(:albums_page) do
+      arg(:filters, :albums_filters)
+
+      resolve(&Resolvers.Albums.list/3)
+    end
+
+    field :album_counts, non_null(:album_counts_page) do
+      arg(:filters, :album_counts_filters)
+
+      resolve(&Resolvers.Albums.list_counts/3)
+    end
+
     field :tags, non_null(:tags_page) do
       arg(:filters, :tags_filters)
 
       resolve(&Resolvers.Tags.list/3)
-    end
-
-    # To be deprecated/standardized
-    field :all_albums, non_null(list_of(non_null(:album))) do
-      arg(:artist, :string)
-
-      resolve(&Resolvers.Albums.all_albums/3)
     end
 
     field :all_tracks, non_null(list_of(non_null(:track))) do
