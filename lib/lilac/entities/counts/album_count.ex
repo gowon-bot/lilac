@@ -44,15 +44,15 @@ defmodule Lilac.AlbumCount do
             users: [Lilac.User.Input.t()],
             pagination: Lilac.Pagination.Input.t() | nil
           }
-  end
 
-  @spec has_users?(%__MODULE__{}) :: boolean()
-  def has_users?(filters) do
-    Map.has_key?(filters, :users)
-  end
+    @spec has_users?(%__MODULE__{}) :: boolean()
+    def has_users?(filters) do
+      Map.has_key?(filters, :users)
+    end
 
-  @spec has_album?(%__MODULE__{}) :: boolean()
-  def has_album?(filters) do
-    Map.has_key?(filters, :album)
+    @spec has_album?(%__MODULE__{}) :: boolean()
+    def has_album?(filters) do
+      Map.has_key?(filters, :album)
+    end
   end
 end
