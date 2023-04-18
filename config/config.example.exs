@@ -14,7 +14,7 @@ config :lilac, Lilac.Repo,
 # Last.fm config
 config :lilac,
   last_fm_api_key: "get me from https://last.fm/api",
-  last_fm_api_secret: "^",
+  last_fm_api_secret: "^"
 
 # General config
 config :lilac,
