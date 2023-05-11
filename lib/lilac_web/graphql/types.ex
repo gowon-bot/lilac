@@ -34,10 +34,9 @@ defmodule LilacWeb.Schema.Types do
     field(:id, non_null(:id))
     field(:username, non_null(:string))
     field(:discord_id, non_null(:string))
-
     field(:privacy, non_null(:privacy))
-    field(:last_indexed, :date)
 
+    field(:last_indexed, :date)
     field(:is_indexing, :boolean)
   end
 
@@ -227,6 +226,13 @@ defmodule LilacWeb.Schema.Types do
 
   input_object :tag_input do
     field(:name, non_null(:string))
+  end
+
+  input_object :user_modifications do
+    field(:username, :string)
+    field(:discord_id, :string)
+    field(:privacy, :privacy)
+    field(:last_fm_session, :privacy)
   end
 
   # Filters

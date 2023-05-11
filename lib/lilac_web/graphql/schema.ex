@@ -127,6 +127,13 @@ defmodule LilacWeb.Schema do
 
       resolve(&Resolvers.Tags.tagArtists/3)
     end
+
+    field :modify_user, :user do
+      arg(:user, :user_input)
+      arg(:modifications, :user_modifications)
+
+      resolve(&Resolvers.User.modify/3)
+    end
   end
 
   subscription do

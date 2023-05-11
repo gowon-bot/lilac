@@ -32,4 +32,12 @@ defmodule LilacWeb.Resolvers.User do
       {:ok, users}
     end
   end
+
+  def modify(_root, %{user: user_input, modifications: modifications}, %{context: context}) do
+    user = Lilac.Repo.get_by!(Lilac.User, user_input)
+
+    if !Auth.is_authorized?(context, user),
+      do: Lilac.Errors.Meta.doughnut_id_doesnt_match(),
+      else: {:ok, Lilac.Services.Users.modify(user, modifications)}
+  end
 end

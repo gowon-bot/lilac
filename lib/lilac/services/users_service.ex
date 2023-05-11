@@ -12,4 +12,9 @@ defmodule Lilac.Services.Users do
       }
     end)
   end
+
+  @spec modify(User.t(), User.Modifications.t()) :: User.t()
+  def modify(user, modifications) do
+    Ecto.Changeset.change(user, modifications) |> Lilac.Repo.update!()
+  end
 end

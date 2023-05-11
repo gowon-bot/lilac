@@ -7,3 +7,14 @@ defmodule Lilac.User.Input do
           discord_id: binary | nil
         }
 end
+
+defmodule Lilac.User.Modifications do
+  defstruct [:username, :discord_id, :privacy, :last_fm_session]
+
+  @type t() :: %__MODULE__{
+          username: binary | nil,
+          discord_id: binary | nil,
+          privacy: integer | nil,
+          last_fm_session: binary | nil
+        }
+end
