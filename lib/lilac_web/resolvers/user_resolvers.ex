@@ -60,12 +60,4 @@ defmodule LilacWeb.Resolvers.User do
       do: Lilac.Errors.Meta.doughnut_id_doesnt_match(),
       else: {:ok, Lilac.Services.Users.logout(user)}
   end
-
-  def add_to_guild(_root, %{discord_id: discord_id, guild_id: guild_id}, _info) do
-    {:ok, Lilac.Services.GuildMembers.add(discord_id, guild_id)}
-  end
-
-  def remove_from_guild(_root, %{discord_id: discord_id, guild_id: guild_id}, _info) do
-    {:ok, Lilac.Services.GuildMembers.remove(discord_id, guild_id)}
-  end
 end

@@ -149,18 +149,33 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.User.logout/3)
     end
 
+    # Guild management
+
     field :add_user_to_guild, :guild_member do
       arg(:discord_id, non_null(:string))
       arg(:guild_id, non_null(:string))
 
-      resolve(&Resolvers.User.add_to_guild/3)
+      resolve(&Resolvers.GuildMember.add_to_guild/3)
     end
 
     field :remove_user_from_guild, :integer do
       arg(:discord_id, non_null(:string))
       arg(:guild_id, non_null(:string))
 
-      resolve(&Resolvers.User.remove_from_guild/3)
+      resolve(&Resolvers.GuildMember.remove_from_guild/3)
+    end
+
+    field :sync_guild, :integer do
+      arg(:guild_id, non_null(:string))
+      arg(:discord_ids, :string |> non_null |> list_of |> non_null)
+
+      resolve(&Resolvers.GuildMember.sync_guild/3)
+    end
+
+    field :clear_guild, :integer do
+      arg(:guild_id, non_null(:string))
+
+      resolve(&Resolvers.GuildMember.clear_guild/3)
     end
   end
 
