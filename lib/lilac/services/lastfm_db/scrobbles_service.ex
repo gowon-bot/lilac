@@ -1,9 +1,8 @@
 defmodule Lilac.Services.Scrobbles do
-  import Ecto.Query, only: [from: 2, from: 1, join: 5, select_merge: 3, select: 3]
+  import Ecto.Query, only: [from: 2, from: 1, select: 3]
 
   alias Lilac.{InputParser, Joiner}
   alias Lilac.Scrobble
-  alias Lilac.GraphQLHelpers.{Introspection, Fields}
 
   @spec list(Scrobble.Filters.t(), Absinthe.Resolution.t()) :: [Scrobble.t()]
   def list(filters, info) do

@@ -1,9 +1,8 @@
 defmodule Lilac.Services.Artists do
-  import Ecto.Query, only: [from: 2, join: 5, preload: 3, where: 3]
+  import Ecto.Query, only: [from: 2, join: 5]
 
   alias Lilac.{InputParser, Joiner}
   alias Lilac.{Artist, ArtistCount}
-  alias Lilac.GraphQLHelpers.{Fields, Introspection}
 
   @spec list(Artist.Filters.t(), %Absinthe.Resolution{}) :: [Artist.t()]
   def list(filters, info) do
