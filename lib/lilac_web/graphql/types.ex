@@ -40,6 +40,11 @@ defmodule LilacWeb.Schema.Types do
     field(:is_indexing, :boolean)
   end
 
+  object :guild_member do
+    field(:guild_id, non_null(:string))
+    field(:user, non_null(:user))
+  end
+
   object :scrobble do
     field(:scrobbled_at, :date)
 

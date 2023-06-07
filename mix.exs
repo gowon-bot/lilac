@@ -35,7 +35,7 @@ defmodule Lilac.MixProject do
     [
       {:phoenix, "~> 1.6.7"},
       {:phoenix_ecto, "~> 4.4"},
-      {:ecto_sql, "~> 3.6"},
+      {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_live_dashboard, "~> 0.6"},
       {:swoosh, "~> 1.3"},

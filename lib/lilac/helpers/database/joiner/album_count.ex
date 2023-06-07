@@ -2,7 +2,6 @@ defmodule Lilac.Joiner.AlbumCount do
   import Ecto.Query, only: [join: 5, select_merge: 3]
 
   alias Lilac.AlbumCount
-  alias Lilac.Scrobble
   alias Lilac.GraphQLHelpers.{Introspection, Fields}
 
   # Conditional methods
