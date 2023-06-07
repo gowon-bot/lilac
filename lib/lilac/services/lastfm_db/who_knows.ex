@@ -38,7 +38,7 @@ defmodule Lilac.Services.WhoKnows do
     if !artist do
       %WhoKnowsArtistRank{artist: artist}
     else
-      rows = who_knows_artist(artist, settings).rows
+      rows = who_knows_artist(artist, Map.delete(settings, :limit)).rows
 
       user_row_idx = Enum.find_index(rows, fn r -> r.user_id == user.id end) || -1
 
@@ -87,7 +87,7 @@ defmodule Lilac.Services.WhoKnows do
     if !album do
       %WhoKnowsAlbumRank{album: album}
     else
-      rows = who_knows_album(album, settings).rows
+      rows = who_knows_album(album, Map.delete(settings, :limit)).rows
 
       user_row_idx = Enum.find_index(rows, fn r -> r.user_id == user.id end) || -1
 
@@ -130,7 +130,7 @@ defmodule Lilac.Services.WhoKnows do
     if !track do
       %WhoKnowsTrackRank{track: track}
     else
-      rows = who_knows_track(track, settings).rows
+      rows = who_knows_track(track, Map.delete(settings, :limit)).rows
 
       user_row_idx = Enum.find_index(rows, fn r -> r.user.id == user.id end) || -1
 
