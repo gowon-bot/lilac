@@ -63,7 +63,7 @@ defmodule LilacWeb.Schema.Types do
   enum :privacy do
     value(:private, description: "No information is displayed")
     value(:discord, description: "Discord tag is displayed")
-    value(:fm_username, description: "Last.fm username is displayed")
+    value(:fmusername, description: "Last.fm username is displayed")
     value(:both, description: "Discord tag is displayed and last.fm is linked")
     value(:unset, description: "Default value; same as private")
   end
