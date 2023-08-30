@@ -4,11 +4,15 @@ defmodule Lilac.Services.GuildMembers do
   alias Lilac.GuildMember
   alias Lilac.User
 
-  @spec add(binary, binary) :: GuildMember.t()
+  @spec add(binary, binary) :: GuildMember.t() | nil
   def add(discord_id, guild_id) do
     user = Lilac.Repo.get_by!(User, %{discord_id: discord_id})
 
-    %Lilac.GuildMember{guild_id: guild_id, user: user} |> Lilac.Repo.insert!(returning: true)
+    case %Lilac.GuildMember{guild_id: guild_id, user: user}
+         |> Lilac.Repo.insert(returning: true) do
+      {:err, _} -> nil
+      {:ok, guild_member} -> guild_member
+    end
   end
 
   @spec remove(binary, binary) :: integer

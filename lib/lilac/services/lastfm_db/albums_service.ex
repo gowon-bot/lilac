@@ -56,7 +56,7 @@ defmodule Lilac.Services.Albums do
 
   @spec generate_joins(
           Ecto.Query.t(),
-          Scrobble.Filters.t(),
+          Album.Filters.t(),
           %Absinthe.Resolution{},
           boolean | nil
         ) ::
@@ -68,7 +68,7 @@ defmodule Lilac.Services.Albums do
 
   @spec generate_joins_for_counts(
           Ecto.Query.t(),
-          Scrobble.Filters.t(),
+          AlbumCount.Filters.t(),
           %Absinthe.Resolution{},
           boolean | nil
         ) ::

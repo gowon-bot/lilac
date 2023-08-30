@@ -34,4 +34,17 @@ defmodule Lilac.GraphQLHelpers.Fields do
       def album_artist, do: ["albumCounts", "album", "artist"]
     end
   end
+
+  defmodule Track do
+    def artist, do: ["tracks", "artist"]
+    def album, do: ["tracks", "album"]
+
+    defmodule Count do
+      def user, do: ["trackCounts", "user"]
+
+      def track, do: ["trackCounts", "track"]
+      def artist, do: ["trackCounts", "track", "artist"]
+      def album, do: ["trackCounts", "track", "album"]
+    end
+  end
 end

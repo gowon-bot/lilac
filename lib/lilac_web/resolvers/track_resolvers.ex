@@ -1,11 +1,20 @@
 defmodule LilacWeb.Resolvers.Tracks do
-  import Ecto.Query, only: [from: 2]
+  alias Lilac.{Track, TrackCount}
+  alias Lilac.Services
 
-  def all_tracks(_root, _args, _info) do
-    query =
-      from l in Lilac.Track,
-        preload: [:artist, :album]
+  @spec list(any, %{filters: Track.Filters.t()}, Absinthe.Resolution.t()) ::
+          {:ok, Track.Page.t()}
+  def list(_root, %{filters: filters}, info) do
+    tracks = Services.Tracks.list(filters, info)
 
-    {:ok, query |> Lilac.Repo.all()}
+    {:ok, Track.Page.generate(tracks, info, filters)}
+  end
+
+  @spec list_counts(any, %{filters: TrackCount.Filters.t()}, Absinthe.Resolution.t()) ::
+          {:ok, TrackCount.Page.t()}
+  def list_counts(_root, %{filters: filters}, info) do
+    track_counts = Services.Tracks.list_counts(filters, info)
+
+    {:ok, TrackCount.Page.generate(track_counts, info, filters)}
   end
 end

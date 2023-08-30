@@ -43,14 +43,22 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.Albums.list_counts/3)
     end
 
+    field :tracks, non_null(:tracks_page) do
+      arg(:filters, :tracks_filters)
+
+      resolve(&Resolvers.Tracks.list/3)
+    end
+
+    field :track_counts, non_null(:track_counts_page) do
+      arg(:filters, :track_counts_filters)
+
+      resolve(&Resolvers.Tracks.list_counts/3)
+    end
+
     field :tags, non_null(:tags_page) do
       arg(:filters, :tags_filters)
 
       resolve(&Resolvers.Tags.list/3)
-    end
-
-    field :all_tracks, non_null(list_of(non_null(:track))) do
-      resolve(&Resolvers.Tracks.all_tracks/3)
     end
 
     # Entities

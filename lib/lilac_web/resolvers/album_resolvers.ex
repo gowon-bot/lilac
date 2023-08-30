@@ -17,6 +17,4 @@ defmodule LilacWeb.Resolvers.Albums do
 
     {:ok, AlbumCount.Page.generate(album_counts, info, filters)}
   end
-
-  # Private methods
 end

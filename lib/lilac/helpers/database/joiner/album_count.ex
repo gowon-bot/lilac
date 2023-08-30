@@ -44,7 +44,7 @@ defmodule Lilac.Joiner.AlbumCount do
           Ecto.Query.t()
   defp maybe_join_album(query, filters, info, select) do
     if AlbumCount.Filters.has_album?(filters) ||
-         Introspection.has_field?(info, Fields.Album.Count.album_artist()) do
+         Introspection.has_field?(info, Fields.Album.Count.album()) do
       query
       |> join_album(select)
     else
