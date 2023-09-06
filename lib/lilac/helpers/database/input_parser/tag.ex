@@ -41,7 +41,7 @@ defmodule Lilac.InputParser.Tag do
 
     cleaned
     |> String.split("")
-    |> Enum.map(fn char -> char <> "(\\s+|-|_)?" end)
+    |> Enum.map(fn char -> Regex.escape(char) <> "(\\s+|-|_)?" end)
     |> Enum.join("")
   end
 
