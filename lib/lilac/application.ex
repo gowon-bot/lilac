@@ -19,10 +19,14 @@ defmodule Lilac.Application do
       {Absinthe.Subscription, LilacWeb.Endpoint},
 
       # Start the indexer registry
-      {Registry, keys: :unique, name: Lilac.IndexerRegistry},
+      # {Registry, keys: :unique, name: Lilac.IndexerRegistry},
 
-      # Start the indexer
-      Lilac.Indexer
+      # Start the sync registry
+      {Registry, keys: :unique, name: Lilac.Sync.Registry},
+
+      # Start the syncer
+      # Lilac.Indexer
+      Lilac.Sync.Syncer
     ]
 
     LilacWeb.Initializer.initialize()
