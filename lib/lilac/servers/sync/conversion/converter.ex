@@ -1,7 +1,7 @@
 defmodule Lilac.Sync.Converter do
   use GenServer
 
-  alias Lilac.Sync.{Conversion, Registry}
+  alias Lilac.Sync.{Conversion, Registry, Dataset}
   alias Lilac.LastFM.Responses
 
   @type scrobbles_type :: [Responses.RecentTracks.RecentTrack.t()]
@@ -13,6 +13,11 @@ defmodule Lilac.Sync.Converter do
     GenServer.cast(Registry.converter(user), {:process_page, page})
   end
 
+  @spec persist_cache(Lilac.User.t()) :: :ok
+  def persist_cache(user) do
+    GenServer.cast(Registry.converter(user), :persist_cache)
+  end
+
   # Server callbacks
 
   def start_link(user) do
@@ -22,13 +27,13 @@ defmodule Lilac.Sync.Converter do
   @impl true
   @spec init(Lilac.User.t()) :: {:ok, map}
   def init(user) do
-    {:ok, %{user: user}}
+    {:ok, %{user: user, converted_pages: 0}}
   end
 
   @impl true
   @spec handle_cast({:process_page, Responses.RecentTracks.t()}, %{user: Lilac.User.t()}) ::
           {:reply, :ok, term}
-  def handle_cast({:process_page, page}, %{user: user}) do
+  def handle_cast({:process_page, page}, %{user: user, converted_pages: converted_pages}) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
     artist_map = convert_artists(user, scrobbles)
@@ -41,7 +46,22 @@ defmodule Lilac.Sync.Converter do
     # insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
     # end
 
-    {:noreply, %{user: user}}
+    if converted_pages + 1 == page.meta.total_pages do
+      handle_last_page(user)
+    end
+
+    {:noreply, %{user: user, converted_pages: converted_pages + 1}}
+  end
+
+  @impl true
+  @spec handle_cast(:persist_cache, %{user: Lilac.User.t()}) ::
+          {:reply, :ok, term}
+  def handle_cast(:persist_cache, %{user: user, converted_pages: converted_pages}) do
+    {artist_counts, album_counts, track_counts} = Conversion.Cache.get_counts(user)
+
+    Dataset.insert_counts(artist_counts, album_counts, track_counts)
+
+    {:noreply, %{user: user, converted_pages: converted_pages}}
   end
 
   # Helpers
@@ -83,4 +103,8 @@ defmodule Lilac.Sync.Converter do
 
   #   Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
   # end
+
+  defp handle_last_page(user) do
+    persist_cache(user)
+  end
 end

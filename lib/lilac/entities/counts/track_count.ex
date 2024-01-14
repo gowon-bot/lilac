@@ -3,6 +3,8 @@ defmodule Lilac.TrackCount do
 
   schema("track_counts") do
     field(:playcount, :integer)
+    field(:first_scrobbled, :utc_datetime)
+    field(:last_scrobbled, :utc_datetime)
 
     belongs_to(:track, Lilac.Track)
     belongs_to(:user, Lilac.User)

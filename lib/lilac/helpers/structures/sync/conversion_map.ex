@@ -80,10 +80,10 @@ defmodule Lilac.Sync.Conversion.Map do
 
     case artist_with_albums do
       {artist, albums} ->
-        Map.put(map, key, build_nested_value(artist_id, artist_name, date, albums, artist))
+        Map.put(map, key, build_nested_value(artist_id, date, albums, artist))
 
       _ ->
-        Map.put(map, key, build_nested_value(artist_id, artist_name, date, %{}))
+        Map.put(map, key, build_nested_value(artist_id, date, %{}))
     end
   end
 
@@ -98,10 +98,10 @@ defmodule Lilac.Sync.Conversion.Map do
     album_value =
       case album_with_tracks do
         {album, tracks} ->
-          build_nested_value(album_id, album_name, date, tracks, album)
+          build_nested_value(album_id, date, tracks, album)
 
         _ ->
-          build_nested_value(album_id, album_name, date, %{})
+          build_nested_value(album_id, date, %{})
       end
 
     artist_value = {artist, Map.put(albums, album_key, album_value)}
@@ -122,10 +122,10 @@ defmodule Lilac.Sync.Conversion.Map do
     track_value =
       case track_or_nothing do
         nil ->
-          build_unnested_value(track_id, track_name, date)
+          build_unnested_value(track_id, date)
 
         track ->
-          build_unnested_value(track_id, track_name, date, track)
+          build_unnested_value(track_id, date, track)
       end
 
     album_value = {album, Map.put(tracks, track_key, track_value)}
@@ -144,16 +144,15 @@ defmodule Lilac.Sync.Conversion.Map do
     end
   end
 
-  @spec build_nested_value(integer, binary, Date.t(), map, map) :: {map, map}
-  defp build_nested_value(id, name, date, children, value \\ %{}) do
-    {build_unnested_value(id, name, date, value), children}
+  @spec build_nested_value(integer, Date.t(), map, map) :: {map, map}
+  defp build_nested_value(id, date, children, value \\ %{}) do
+    {build_unnested_value(id, date, value), children}
   end
 
-  @spec build_nested_value(integer, binary, Date.t(), map) :: map
-  defp build_unnested_value(id, name, date, value \\ %{}) do
+  @spec build_nested_value(integer, Date.t(), map) :: map
+  defp build_unnested_value(id, date, value \\ %{}) do
     %{
       id: if(Map.has_key?(value, :id), do: value.id, else: id),
-      name: if(Map.has_key?(value, :name), do: value.name, else: name),
       playcount: Map.get(value, :playcount, 0) + 1,
       first_scrobbled: older_date(Map.get(value, :first_scrobbled), date),
       last_scrobbled: newer_date(Map.get(value, :last_scrobbled), date)

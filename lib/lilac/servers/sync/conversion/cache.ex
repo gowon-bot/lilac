@@ -9,6 +9,8 @@ defmodule Lilac.Sync.Conversion.Cache do
   @type raw_album :: {binary, binary}
   @type raw_track :: {binary, binary, binary}
 
+  @type counts :: {[Lilac.ArtistCount.t()], [Lilac.AlbumCount.t()], [Lilac.TrackCount.t()]}
+
   def start_link(user) do
     GenServer.start_link(__MODULE__, user, name: Registry.conversion_cache(user))
   end
@@ -33,9 +35,9 @@ defmodule Lilac.Sync.Conversion.Cache do
     )
   end
 
-  @spec get_cache(Lilac.User.t()) :: [map]
-  def get_cache(user) do
-    GenServer.call(Registry.conversion_cache(user), :get_cache)
+  @spec get_counts(Lilac.User.t()) :: counts
+  def get_counts(user) do
+    GenServer.call(Registry.conversion_cache(user), {:get_counts, user})
   end
 
   @spec get_unconverted_artists(Lilac.User.t(), Sync.Converter.scrobbles_type()) :: [raw_artist()]
@@ -64,8 +66,45 @@ defmodule Lilac.Sync.Conversion.Cache do
   end
 
   @impl true
-  def handle_call(:get_cache, _from, state) do
-    {:reply, state, state}
+  def handle_call({:get_counts, user}, _from, state) do
+    counts =
+      Enum.reduce(state, {[], [], []}, fn {_, {artist, albums}}, {acs, lcs, tcs} ->
+        new_ac = %{
+          artist_id: artist.id,
+          playcount: artist.playcount,
+          first_scrobbled: artist.first_scrobbled,
+          last_scrobbled: artist.last_scrobbled,
+          user_id: user.id
+        }
+
+        {new_lcs, new_tcs} =
+          Enum.reduce(albums, {[], []}, fn {_, {album, tracks}}, {new_lcs, album_tcs} ->
+            new_lc = %{
+              album_id: album.id,
+              playcount: album.playcount,
+              first_scrobbled: album.first_scrobbled,
+              last_scrobbled: album.last_scrobbled,
+              user_id: user.id
+            }
+
+            new_tcs =
+              Enum.map(tracks, fn {_, track} ->
+                %{
+                  track_id: track.id,
+                  playcount: track.playcount,
+                  first_scrobbled: track.first_scrobbled,
+                  last_scrobbled: track.last_scrobbled,
+                  user_id: user.id
+                }
+              end)
+
+            {new_lcs ++ [new_lc], album_tcs ++ new_tcs}
+          end)
+
+        {acs ++ [new_ac], lcs ++ new_lcs, tcs ++ new_tcs}
+      end)
+
+    {:reply, counts, state}
   end
 
   @impl true
