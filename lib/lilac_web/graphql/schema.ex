@@ -188,7 +188,7 @@ defmodule LilacWeb.Schema do
   end
 
   subscription do
-    field :index, :indexing_progress do
+    field :sync, :sync_progress do
       arg(:user, non_null(:user_input))
 
       config(fn args, _ ->

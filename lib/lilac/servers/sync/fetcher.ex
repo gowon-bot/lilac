@@ -108,9 +108,7 @@ defmodule Lilac.Sync.Fetcher do
       Ecto.Changeset.change(user, last_indexed: first_scrobble.scrobbled_at)
       |> Lilac.Repo.update!()
 
-    # Enum.each(1..total_pages, fn page_number ->
-    #   Sync.ProgressReporter.add_page(user, page_number)
-    # end)
+    Sync.ProgressReporter.set_total(user, :fetching, page.meta.total)
 
     fetch_all_pages(user, params, total_pages)
 

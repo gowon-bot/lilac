@@ -2,16 +2,22 @@ defmodule Lilac.Sync.Subscriptions do
   alias Lilac.Sync
   alias Lilac.LastFM.API.Params
 
-  @spec update(Sync.Supervisor.action(), integer, integer, integer) :: no_return
-  def update(action, page, total_pages, user_id) do
+  @spec update(
+          integer,
+          Sync.Supervisor.action(),
+          Sync.ProgressReporter.stage(),
+          Sync.ProgressReporter.stage_progress()
+        ) :: no_return
+  def update(user_id, action, stage, stage_progress) do
     Absinthe.Subscription.publish(
       LilacWeb.Endpoint,
       %{
-        page: page,
-        total_pages: total_pages,
-        action: action
+        action: action,
+        stage: stage,
+        current: stage_progress.current,
+        total: stage_progress.total
       },
-      index: "#{user_id}"
+      sync: "#{user_id}"
     )
   end
 
@@ -22,10 +28,10 @@ defmodule Lilac.Sync.Subscriptions do
     Process.sleep(300)
 
     update(
+      user.id,
       if(is_nil(params.from), do: :indexing, else: :updating),
-      0,
-      0,
-      user.id
+      :inserting,
+      %{total: 0, current: 0}
     )
 
     Sync.Supervisor.self_destruct(user)

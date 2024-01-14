@@ -1,7 +1,7 @@
 defmodule Lilac.Sync.Converter do
   use GenServer
 
-  alias Lilac.Sync.{Conversion, Registry, Dataset}
+  alias Lilac.Sync.{Conversion, Registry, Dataset, ProgressReporter}
   alias Lilac.LastFM.Responses
 
   @type scrobbles_type :: [Responses.RecentTracks.RecentTrack.t()]
@@ -46,6 +46,8 @@ defmodule Lilac.Sync.Converter do
     # insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
     # end
 
+    ProgressReporter.capture_progress(user, :fetching, length(scrobbles))
+
     if converted_pages + 1 == page.meta.total_pages do
       handle_last_page(user)
     end
@@ -59,7 +61,7 @@ defmodule Lilac.Sync.Converter do
   def handle_cast(:persist_cache, %{user: user, converted_pages: converted_pages}) do
     {artist_counts, album_counts, track_counts} = Conversion.Cache.get_counts(user)
 
-    Dataset.insert_counts(artist_counts, album_counts, track_counts)
+    Dataset.insert_counts(user, artist_counts, album_counts, track_counts)
 
     {:noreply, %{user: user, converted_pages: converted_pages}}
   end

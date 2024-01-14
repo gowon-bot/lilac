@@ -5,25 +5,27 @@ defmodule Lilac.Sync.ProgressReporter do
   """
   use GenServer, restart: :transient
 
-  alias Lilac.LastFM.Responses
   alias Lilac.Sync
   alias Lilac.Sync.Registry
 
+  @type stage :: :fetching | :inserting
+  @type stage_progress :: %{total: integer, current: integer}
+
   # Client API
 
-  @spec capture_progress(Lilac.User.t(), Responses.RecentTracks.t()) :: term
-  def capture_progress(user, page) do
+  @spec capture_progress(Lilac.User.t(), stage, integer) :: no_return()
+  def capture_progress(user, stage, count) do
     GenServer.call(
       Registry.progress_reporter(user),
-      {:capture_progress, page}
+      {:capture_progress, stage, count}
     )
   end
 
-  @spec add_page(Lilac.User.t(), integer()) :: term
-  def add_page(user, page_number) do
+  @spec set_total(Lilac.User.t(), stage, integer) :: no_return()
+  def set_total(user, stage, total) do
     GenServer.call(
       Registry.progress_reporter(user),
-      {:add_page, page_number}
+      {:set_total, stage, total}
     )
   end
 
@@ -40,37 +42,68 @@ defmodule Lilac.Sync.ProgressReporter do
 
   @impl true
   def init({action, user}) do
-    {:ok, %{action: action, pages: [], page_count: 0, user: user}}
+    {:ok,
+     %{
+       action: action,
+       user: user,
+       counts: %{total: 0, current: 0},
+       scrobbles: %{total: 0, current: 0}
+     }}
   end
 
   @impl true
-  def handle_call({:capture_progress, page}, _from, %{
-        pages: pages,
+  def handle_call({:capture_progress, :fetching, scrobble_count}, _from, %{
         action: action,
-        page_count: page_count,
-        user: user
+        user: user,
+        scrobbles: %{total: total_scrobbles, current: current_scrobbles},
+        counts: counts
       }) do
-    pages = Enum.filter(pages, fn el -> el != page.meta.page end)
+    current_scrobbles = current_scrobbles + scrobble_count
 
-    page_count = page_count + 1
+    Sync.Subscriptions.update(user.id, action, :fetching, %{
+      total: total_scrobbles,
+      current: current_scrobbles
+    })
 
-    Sync.Subscriptions.update(action, page_count, page.meta.total_pages, user.id)
-
-    if page_count == page.meta.total_pages do
-      Sync.Supervisor.self_destruct(user)
-    end
-
-    {:reply, :ok, %{pages: pages, action: action, page_count: page_count, user: user}}
-  end
-
-  @impl true
-  def handle_call({:add_page, page_number}, _from, %{
-        pages: pages,
-        action: action,
-        page_count: page_count,
-        user: user
-      }) do
     {:reply, :ok,
-     %{pages: pages ++ [page_number], action: action, page_count: page_count, user: user}}
+     %{
+       action: action,
+       user: user,
+       counts: counts,
+       scrobbles: %{total: total_scrobbles, current: current_scrobbles}
+     }}
+  end
+
+  @impl true
+  def handle_call({:capture_progress, :inserting, chunk_size}, _from, %{
+        action: action,
+        user: user,
+        scrobbles: scrobbles,
+        counts: %{total: total_entities, current: current_entities}
+      }) do
+    current_entities = current_entities + chunk_size
+
+    Sync.Subscriptions.update(user.id, action, :inserting, %{
+      total: total_entities,
+      current: current_entities
+    })
+
+    {:reply, :ok,
+     %{
+       action: action,
+       user: user,
+       scrobbles: scrobbles,
+       counts: %{total: total_entities, current: current_entities}
+     }}
+  end
+
+  @impl true
+  def handle_call({:set_total, :fetching, total_scrobbles}, _from, state) do
+    {:reply, :ok, %{state | scrobbles: %{current: 0, total: total_scrobbles}}}
+  end
+
+  @impl true
+  def handle_call({:set_total, :inserting, total_entities}, _from, state) do
+    {:reply, :ok, %{state | counts: %{current: 0, total: total_entities}}}
   end
 end
