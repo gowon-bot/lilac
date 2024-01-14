@@ -51,11 +51,11 @@ defmodule Lilac.Sync.Fetcher do
 
   @impl true
   def handle_cast({:sync_update}, state) do
-    unless state.user.last_indexed == nil do
+    unless state.user.last_synced == nil do
       params = %Params.RecentTracks{
         username: Lilac.Requestable.from_user(state.user),
         limit: 500,
-        from: DateTime.to_unix(state.user.last_indexed) + 1
+        from: DateTime.to_unix(state.user.last_synced) + 1
       }
 
       total_pages =
@@ -105,7 +105,7 @@ defmodule Lilac.Sync.Fetcher do
         else: Enum.at(page.tracks, 0)
 
     user =
-      Ecto.Changeset.change(user, last_indexed: first_scrobble.scrobbled_at)
+      Ecto.Changeset.change(user, last_synced: first_scrobble.scrobbled_at)
       |> Lilac.Repo.update!()
 
     Sync.ProgressReporter.set_total(user, :fetching, page.meta.total)

@@ -1,7 +1,9 @@
 defmodule Lilac.Sync.ProgressReporter do
   @moduledoc """
-    Keeps track of indexing progress, and notifies its caller when all pages have been processed.
-    Also pushes progress updates to the websocket
+    Keeps track of sync progress, and pushes updates to the websocket
+    Happens in two stages:
+      - fetching: when the scrobbles are being fetched and converted
+      - inserting: when the generated artist, album, and track counts are being persisted to the database
   """
   use GenServer, restart: :transient
 

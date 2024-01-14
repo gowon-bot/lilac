@@ -36,8 +36,8 @@ defmodule LilacWeb.Schema.Types do
     field(:discord_id, non_null(:string))
     field(:privacy, non_null(:privacy))
 
-    field(:last_indexed, :date)
-    field(:is_indexing, :boolean)
+    field(:last_synced, :date)
+    field(:is_syncing, :boolean)
   end
 
   object :guild_member do

@@ -6,7 +6,7 @@ defmodule Lilac.User do
   schema("users") do
     field(:discord_id, :string)
     field(:username, :string)
-    field(:last_indexed, :utc_datetime)
+    field(:last_synced, :utc_datetime)
     field(:last_fm_session, :string)
 
     field(:privacy, Ecto.Enum, values: [private: 1, discord: 2, fmusername: 3, both: 4, unset: 5])
@@ -17,6 +17,6 @@ defmodule Lilac.User do
     timestamps()
 
     # Not persisted
-    field(:is_indexing, :boolean, virtual: true)
+    field(:is_syncing, :boolean, virtual: true)
   end
 end

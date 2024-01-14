@@ -26,7 +26,7 @@ defmodule Lilac.Sync.Syncer do
         full_sync_or_update.(user)
 
       {:error, {:already_started, _pid}} ->
-        Lilac.Errors.Indexing.user_already_indexing()
+        Lilac.Errors.Sync.user_already_syncing()
 
       _ ->
         Lilac.Errors.Meta.unknown_server_error()

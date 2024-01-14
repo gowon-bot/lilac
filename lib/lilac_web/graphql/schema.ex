@@ -116,10 +116,10 @@ defmodule LilacWeb.Schema do
   end
 
   mutation do
-    field :index, :string do
+    field :sync, :string do
       arg(:user, :user_input)
 
-      resolve(&Resolvers.User.index/3)
+      resolve(&Resolvers.User.sync/3)
     end
 
     field :update, :string do
