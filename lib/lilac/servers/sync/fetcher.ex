@@ -18,20 +18,20 @@ defmodule Lilac.Sync.Fetcher do
 
   @spec start_sync(Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
   def start_sync(user) do
-    GenServer.cast(Registry.fetcher(user), {:sync})
+    GenServer.cast(Registry.fetcher(user), :sync)
     {:ok, nil}
   end
 
-  @spec start_sync_update(Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
-  def start_sync_update(user) do
-    GenServer.cast(Registry.fetcher(user), {:sync_update})
+  @spec start_update(Lilac.User.t()) :: {:error, String.t()} | {:ok, nil}
+  def start_update(user) do
+    GenServer.cast(Registry.fetcher(user), :update)
     {:ok, nil}
   end
 
   ## Server callbacks
 
   @impl true
-  def handle_cast({:sync}, state) do
+  def handle_cast(:sync, state) do
     Sync.Dataset.clear(state.user)
 
     params = %Params.RecentTracks{
@@ -50,7 +50,7 @@ defmodule Lilac.Sync.Fetcher do
   end
 
   @impl true
-  def handle_cast({:sync_update}, state) do
+  def handle_cast(:update, state) do
     unless state.user.last_synced == nil do
       params = %Params.RecentTracks{
         username: Lilac.Requestable.from_user(state.user),
@@ -62,7 +62,7 @@ defmodule Lilac.Sync.Fetcher do
         initial_fetch(
           state.user,
           params,
-          :sync_update
+          :update
         )
 
       {:noreply, %{state | params: params, total_pages: total_pages}}
@@ -110,12 +110,12 @@ defmodule Lilac.Sync.Fetcher do
 
     Sync.ProgressReporter.set_total(user, :fetching, page.meta.total)
 
-    fetch_all_pages(user, params, total_pages)
+    fetch_all_pages(user, params, total_pages, action)
 
     total_pages
   end
 
-  defp fetch_all_pages(user, params, total_pages) do
+  defp fetch_all_pages(user, params, total_pages, action) do
     Lilac.Parallel.map(
       1..total_pages,
       fn page_number ->
@@ -127,7 +127,8 @@ defmodule Lilac.Sync.Fetcher do
           {:ok, page} ->
             Sync.Converter.process_page(
               user,
-              page
+              page,
+              action
             )
 
           {:error, error} ->

@@ -29,7 +29,7 @@ defmodule Lilac.Sync.Subscriptions do
 
     update(
       user.id,
-      if(is_nil(params.from), do: :sync, else: :sync_update),
+      if(is_nil(params.from), do: :sync, else: :update),
       :inserting,
       %{total: 0, current: 0}
     )

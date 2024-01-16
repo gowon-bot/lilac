@@ -4,7 +4,7 @@ defmodule Lilac.Sync.Supervisor do
   alias Lilac.Sync
   alias Lilac.Sync.{Registry, Fetcher, Syncer}
 
-  @type action :: :sync | :sync_update
+  @type action :: :sync | :update
 
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(user) do
@@ -29,8 +29,8 @@ defmodule Lilac.Sync.Supervisor do
     Fetcher.start_sync(user)
   end
 
-  def sync_update(user) do
-    Fetcher.start_sync_update(user)
+  def update(user) do
+    Fetcher.start_update(user)
   end
 
   # This function spins up all the necessary servers for syncing,

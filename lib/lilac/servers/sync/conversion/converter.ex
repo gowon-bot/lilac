@@ -1,21 +1,23 @@
 defmodule Lilac.Sync.Converter do
   use GenServer
 
-  alias Lilac.Sync.{Conversion, Registry, Dataset, ProgressReporter}
+  alias Lilac.Sync
+  alias Lilac.Sync.{Conversion, Registry, Dataset, ProgressReporter, Syncer}
   alias Lilac.LastFM.Responses
 
   @type scrobbles_type :: [Responses.RecentTracks.RecentTrack.t()]
 
   # Client API
 
-  @spec process_page(Lilac.User.t(), Responses.RecentTracks.t()) :: :ok
-  def process_page(user, page) do
-    GenServer.cast(Registry.converter(user), {:process_page, page})
+  @spec process_page(Lilac.User.t(), Responses.RecentTracks.t(), Sync.Supervisor.action()) ::
+          :ok
+  def process_page(user, page, action) do
+    GenServer.cast(Registry.converter(user), {:process_page, page, action})
   end
 
-  @spec persist_cache(Lilac.User.t()) :: :ok
-  def persist_cache(user) do
-    GenServer.cast(Registry.converter(user), :persist_cache)
+  @spec persist_cache(Lilac.User.t(), Sync.Supervisor.action()) :: :ok
+  def persist_cache(user, action) do
+    GenServer.cast(Registry.converter(user), {:persist_cache, action})
   end
 
   # Server callbacks
@@ -31,9 +33,11 @@ defmodule Lilac.Sync.Converter do
   end
 
   @impl true
-  @spec handle_cast({:process_page, Responses.RecentTracks.t()}, %{user: Lilac.User.t()}) ::
+  @spec handle_cast({:process_page, Responses.RecentTracks.t(), Sync.Supervisor.action()}, %{
+          user: Lilac.User.t()
+        }) ::
           {:reply, :ok, term}
-  def handle_cast({:process_page, page}, %{user: user, converted_pages: converted_pages}) do
+  def handle_cast({:process_page, page, action}, %{user: user, converted_pages: converted_pages}) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
     artist_map = convert_artists(user, scrobbles)
@@ -49,19 +53,24 @@ defmodule Lilac.Sync.Converter do
     ProgressReporter.capture_progress(user, :fetching, length(scrobbles))
 
     if converted_pages + 1 == page.meta.total_pages do
-      handle_last_page(user)
+      handle_last_page(user, action)
     end
 
     {:noreply, %{user: user, converted_pages: converted_pages + 1}}
   end
 
   @impl true
-  @spec handle_cast(:persist_cache, %{user: Lilac.User.t()}) ::
+  @spec handle_cast({:persist_cache, Sync.Supervisor.action()}, %{user: Lilac.User.t()}) ::
           {:reply, :ok, term}
-  def handle_cast(:persist_cache, %{user: user, converted_pages: converted_pages}) do
+  def handle_cast({:persist_cache, action}, %{user: user, converted_pages: converted_pages}) do
     {artist_counts, album_counts, track_counts} = Conversion.Cache.get_counts(user)
 
-    Dataset.insert_counts(user, artist_counts, album_counts, track_counts)
+    case action do
+      :sync -> Dataset.insert_counts(user, artist_counts, album_counts, track_counts)
+      :update -> Dataset.upsert_counts(user, artist_counts, album_counts, track_counts)
+    end
+
+    Syncer.terminate_sync(user)
 
     {:noreply, %{user: user, converted_pages: converted_pages}}
   end
@@ -106,7 +115,8 @@ defmodule Lilac.Sync.Converter do
   #   Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
   # end
 
-  defp handle_last_page(user) do
-    persist_cache(user)
+  @spec handle_last_page(Lilac.User.t(), Sync.Supervisor.action()) :: no_return()
+  defp handle_last_page(user, action) do
+    persist_cache(user, action)
   end
 end

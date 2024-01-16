@@ -17,7 +17,7 @@ defmodule Lilac.Sync.Syncer do
   end
 
   def update(user) do
-    full_sync_or_update(user, &Lilac.Sync.Supervisor.sync_update/1)
+    full_sync_or_update(user, &Lilac.Sync.Supervisor.update/1)
   end
 
   defp full_sync_or_update(user, full_sync_or_update) do
