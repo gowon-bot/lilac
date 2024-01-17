@@ -46,9 +46,9 @@ defmodule Lilac.Sync.Converter do
 
     Conversion.Cache.add_scrobbles(user, scrobbles, artist_map, album_map, track_map)
 
-    # if user.has_premium do
-    # insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
-    # end
+    if user.has_premium do
+      insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
+    end
 
     ProgressReporter.capture_progress(user, :fetching, length(scrobbles))
 
@@ -95,25 +95,43 @@ defmodule Lilac.Sync.Converter do
     Conversion.convert_tracks(user, unconverted, artist_map, album_map)
   end
 
-  # @spec insert_scrobbles(scrobbles_type, map, map, map, Lilac.User.t()) :: no_return()
-  # def insert_scrobbles(scrobbles, artist_map, album_map, track_map, user) do
-  #   converted_scrobbles =
-  #     Enum.map(scrobbles, fn scrobble ->
-  #       artist_id = ConversionMap.get(artist_map, scrobble.artist)
-  #       album_id = ConversionMap.get_nested(album_map, [artist_id, scrobble.album])
-  #       track_id = ConversionMap.get_nested(track_map, [artist_id, album_id, scrobble.name])
+  @spec insert_scrobbles(scrobbles_type, map, map, map, Lilac.User.t()) :: no_return()
+  def insert_scrobbles(scrobbles, artist_map, album_map, track_map, user) do
+    converted_scrobbles =
+      Enum.map(scrobbles, fn scrobble ->
+        artist_id = Conversion.Cache.get_artist_id(artist_map, user, scrobble.artist)
 
-  #       %{
-  #         user_id: user.id,
-  #         artist_id: artist_id,
-  #         album_id: album_id,
-  #         track_id: track_id,
-  #         scrobbled_at: scrobble.scrobbled_at
-  #       }
-  #     end)
+        album_id =
+          Conversion.Cache.get_album_id(
+            album_map,
+            user,
+            {artist_id, scrobble.artist},
+            scrobble.album
+          )
 
-  #   Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
-  # end
+        track_id =
+          Conversion.Cache.get_track_id(
+            track_map,
+            user,
+            {artist_id, scrobble.artist},
+            {album_id, scrobble.album},
+            scrobble.name
+          )
+
+        %{
+          user_id: user.id,
+          artist_id: artist_id,
+          artist_name: scrobble.artist,
+          album_id: album_id,
+          album_name: scrobble.album,
+          track_id: track_id,
+          track_name: scrobble.name,
+          scrobbled_at: scrobble.scrobbled_at
+        }
+      end)
+
+    Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
+  end
 
   @spec handle_last_page(Lilac.User.t(), Sync.Supervisor.action()) :: no_return()
   defp handle_last_page(user, action) do

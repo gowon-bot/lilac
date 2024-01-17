@@ -9,6 +9,8 @@ defmodule Lilac.Sync.Conversion.Cache do
   @type raw_album :: {binary, binary}
   @type raw_track :: {binary, binary, binary}
 
+  @typep id_and_name :: {integer, binary}
+
   @type counts :: {[Lilac.ArtistCount.t()], [Lilac.AlbumCount.t()], [Lilac.TrackCount.t()]}
 
   def start_link(user) do
@@ -60,10 +62,39 @@ defmodule Lilac.Sync.Conversion.Cache do
     GenServer.call(Registry.conversion_cache(user), {:get_artist_id, artist})
   end
 
+  @spec get_artist_id(map, Lilac.User.t(), binary) :: integer | nil
+  def get_artist_id(artist_map, user, artist) do
+    NestedMap.get(artist_map, artist) || get_artist_id(user, artist)
+  end
+
   @spec get_album_id(Lilac.User.t(), binary, binary) :: integer | nil
   def get_album_id(user, artist, album) do
     GenServer.call(Registry.conversion_cache(user), {:get_album_id, artist, album})
   end
+
+  @spec get_album_id(map, Lilac.User.t(), id_and_name, binary) :: integer | nil
+  def get_album_id(album_map, user, {artist_id, artist}, album) do
+    NestedMap.get(album_map, [artist_id, album]) || get_album_id(user, artist, album)
+  end
+
+  @spec get_track_id(Lilac.User.t(), binary, binary, binary) :: integer | nil
+  def get_track_id(user, artist, album, track) do
+    GenServer.call(Registry.conversion_cache(user), {:get_track_id, artist, album, track})
+  end
+
+  @spec get_track_id(map, Lilac.User.t(), id_and_name, id_and_name, binary) :: integer | nil
+  def get_track_id(
+        album_map,
+        user,
+        {artist_id, artist},
+        {album_id, album},
+        track
+      ) do
+    NestedMap.get(album_map, [artist_id, album_id, track]) ||
+      get_track_id(user, artist, album, track)
+  end
+
+  # Server callbacks
 
   @impl true
   def handle_call({:get_counts, user}, _from, state) do
@@ -139,6 +170,11 @@ defmodule Lilac.Sync.Conversion.Cache do
   @impl true
   def handle_call({:get_album_id, artist, album}, _from, state) do
     {:reply, Conversion.Map.get_album_id(state, artist, album), state}
+  end
+
+  @impl true
+  def handle_call({:get_track_id, artist, album, track}, _from, state) do
+    {:reply, Conversion.Map.get_track_id(state, artist, album, track), state}
   end
 
   @impl true

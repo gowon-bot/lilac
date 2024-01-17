@@ -35,6 +35,7 @@ defmodule LilacWeb.Schema.Types do
     field(:username, non_null(:string))
     field(:discord_id, non_null(:string))
     field(:privacy, non_null(:privacy))
+    field(:has_premium, non_null(:boolean))
 
     field(:last_synced, :date)
     field(:is_syncing, :boolean)
@@ -256,6 +257,7 @@ defmodule LilacWeb.Schema.Types do
     field(:discord_id, :string)
     field(:privacy, :privacy)
     field(:last_fm_session, :privacy)
+    field(:has_premium, :boolean)
   end
 
   # Filters

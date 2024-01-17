@@ -8,6 +8,7 @@ defmodule Lilac.User do
     field(:username, :string)
     field(:last_synced, :utc_datetime)
     field(:last_fm_session, :string)
+    field(:has_premium, :boolean)
 
     field(:privacy, Ecto.Enum, values: [private: 1, discord: 2, fmusername: 3, both: 4, unset: 5])
 
