@@ -118,6 +118,7 @@ defmodule LilacWeb.Schema do
   mutation do
     field :sync, :string do
       arg(:user, :user_input)
+      arg(:force_restart, :boolean)
 
       resolve(&Resolvers.User.sync/3)
     end

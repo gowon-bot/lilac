@@ -10,7 +10,7 @@ defmodule Lilac.Sync.ProgressReporter do
   alias Lilac.Sync
   alias Lilac.Sync.Registry
 
-  @type stage :: :fetching | :inserting
+  @type stage :: :fetching | :inserting | :terminated
   @type stage_progress :: %{total: integer, current: integer}
 
   # Client API
@@ -19,7 +19,7 @@ defmodule Lilac.Sync.ProgressReporter do
   def capture_progress(user, stage, count) do
     GenServer.call(
       Registry.progress_reporter(user),
-      {:capture_progress, stage, count}
+      {stage, count}
     )
   end
 
@@ -54,7 +54,7 @@ defmodule Lilac.Sync.ProgressReporter do
   end
 
   @impl true
-  def handle_call({:capture_progress, :fetching, scrobble_count}, _from, %{
+  def handle_call({:fetching, scrobble_count}, _from, %{
         action: action,
         user: user,
         scrobbles: %{total: total_scrobbles, current: current_scrobbles},
@@ -77,7 +77,7 @@ defmodule Lilac.Sync.ProgressReporter do
   end
 
   @impl true
-  def handle_call({:capture_progress, :inserting, chunk_size}, _from, %{
+  def handle_call({:inserting, chunk_size}, _from, %{
         action: action,
         user: user,
         scrobbles: scrobbles,
@@ -96,6 +96,22 @@ defmodule Lilac.Sync.ProgressReporter do
        user: user,
        scrobbles: scrobbles,
        counts: %{total: total_entities, current: current_entities}
+     }}
+  end
+
+  @impl true
+  def handle_call({:terminated, _}, _from, %{user: user, action: action}) do
+    Sync.Subscriptions.update(user.id, action, :terminated, %{
+      total: 0,
+      current: 0
+    })
+
+    {:reply, :ok,
+     %{
+       action: action,
+       user: user,
+       scrobbles: 0,
+       counts: %{total: 0, current: 0}
      }}
   end
 

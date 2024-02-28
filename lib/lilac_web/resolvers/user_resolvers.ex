@@ -5,12 +5,14 @@ defmodule LilacWeb.Resolvers.User do
   alias Lilac.GraphQLHelpers.{Introspection, Fields}
   alias Lilac.Sync.Syncer
 
-  def sync(_root, %{user: user_input}, %{context: context}) do
+  def sync(_root, args, %{context: context}) do
+    %{user: user_input, force_restart: force_restart?} = Map.merge(%{force_restart: false}, args)
+
     user = Lilac.Repo.get_by!(Lilac.User, user_input)
 
     if !Auth.is_authorized?(context, user),
       do: Lilac.Errors.Meta.doughnut_id_doesnt_match(),
-      else: Syncer.sync(user)
+      else: Syncer.sync(user, force_restart?)
   end
 
   def update(_root, %{user: user_input}, %{context: context}) do
