@@ -160,6 +160,27 @@ defmodule LilacWeb.Schema.Types do
     field(:below, :ambiguous_track_count)
   end
 
+  # Who first
+  object :who_first_row do
+    field(:user, non_null(:user))
+    field(:first_scrobbled, non_null(:date))
+    field(:last_scrobbled, non_null(:date))
+  end
+
+  object :who_first_artist_response do
+    field(:rows, non_null(list_of(non_null(:who_first_row))))
+    field(:artist, non_null(:artist))
+  end
+
+  object :who_first_artist_rank do
+    field(:artist, :artist)
+
+    field(:rank, non_null(:integer))
+    field(:first_scrobbled, non_null(:date))
+    field(:last_scrobbled, non_null(:date))
+    field(:total_listeners, non_null(:integer))
+  end
+
   # Pages
   object(:scrobbles_page) do
     field(:scrobbles, non_null(list_of(non_null(:scrobble))))
@@ -225,6 +246,13 @@ defmodule LilacWeb.Schema.Types do
     field(:guild_id, :string)
     field(:limit, :integer)
     field(:user_ids, list_of(non_null(:string)))
+  end
+
+  input_object :who_first_input do
+    field(:guild_id, :string)
+    field(:limit, :integer)
+    field(:user_ids, list_of(non_null(:string)))
+    field(:reverse, :boolean)
   end
 
   # Music entities

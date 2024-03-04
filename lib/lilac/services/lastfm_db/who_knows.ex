@@ -38,7 +38,7 @@ defmodule Lilac.Services.WhoKnows do
     if !artist do
       %WhoKnowsArtistRank{artist: artist}
     else
-      rows = who_knows_artist(artist, settings).rows
+      rows = who_knows_artist(artist, settings |> Map.delete(:limit)).rows
 
       user_row_idx = Enum.find_index(rows, fn r -> r.user_id == user.id end) || -1
 
@@ -146,7 +146,7 @@ defmodule Lilac.Services.WhoKnows do
   end
 
   @spec parse_who_knows_settings(Ecto.Query.t(), %Lilac.WhoKnows.Input{}) :: Ecto.Query.t()
-  defp parse_who_knows_settings(query, settings) do
+  def parse_who_knows_settings(query, settings) do
     query
     |> InputParser.WhoKnows.maybe_guild_id(Map.get(settings, :guild_id))
     |> InputParser.WhoKnows.maybe_user_ids(Map.get(settings, :user_ids))

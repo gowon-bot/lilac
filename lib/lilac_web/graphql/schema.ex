@@ -113,6 +113,22 @@ defmodule LilacWeb.Schema do
 
       resolve(&Resolvers.WhoKnows.who_knows_track_rank/3)
     end
+
+    # Who first
+    field :who_first_artist, non_null(:who_first_artist_response) do
+      arg(:artist, :artist_input)
+      arg(:settings, :who_first_input)
+
+      resolve(&Resolvers.WhoFirst.who_first_artist/3)
+    end
+
+    field :who_first_artist_rank, non_null(:who_first_artist_rank) do
+      arg(:artist, :artist_input)
+      arg(:user, :user_input)
+      arg(:settings, :who_first_input)
+
+      resolve(&Resolvers.WhoFirst.who_first_artist_rank/3)
+    end
   end
 
   mutation do
