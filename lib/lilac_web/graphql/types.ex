@@ -81,6 +81,8 @@ defmodule LilacWeb.Schema.Types do
   object :artist_count do
     field(:artist, non_null(:artist))
     field(:playcount, non_null(:integer))
+    field(:first_scrobbled, :date)
+    field(:last_scrobbled, :date)
 
     field(:user, non_null(:user))
   end
