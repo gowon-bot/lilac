@@ -35,9 +35,10 @@ defmodule LilacWeb.Schema.Types do
     field(:username, non_null(:string))
     field(:discord_id, non_null(:string))
     field(:privacy, non_null(:privacy))
+    field(:has_premium, non_null(:boolean))
 
-    field(:last_indexed, :date)
-    field(:is_indexing, :boolean)
+    field(:last_synced, :date)
+    field(:is_syncing, :boolean)
   end
 
   object :guild_member do
@@ -68,11 +69,12 @@ defmodule LilacWeb.Schema.Types do
     value(:unset, description: "Default value; same as private")
   end
 
-  # Indexing
-  object :indexing_progress do
-    field(:page, non_null(:integer))
-    field(:total_pages, non_null(:integer))
+  # Sync
+  object :sync_progress do
     field(:action, non_null(:string))
+    field(:stage, non_null(:string))
+    field(:current, non_null(:integer))
+    field(:total, non_null(:integer))
   end
 
   # Counts
@@ -255,6 +257,7 @@ defmodule LilacWeb.Schema.Types do
     field(:discord_id, :string)
     field(:privacy, :privacy)
     field(:last_fm_session, :privacy)
+    field(:has_premium, :boolean)
   end
 
   # Filters

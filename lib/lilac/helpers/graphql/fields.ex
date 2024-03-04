@@ -6,7 +6,7 @@ defmodule Lilac.GraphQLHelpers.Fields do
   end
 
   defmodule User do
-    def is_indexing, do: "isIndexing"
+    def is_syncing, do: "isSyncing"
   end
 
   defmodule Scrobble do

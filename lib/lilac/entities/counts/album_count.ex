@@ -3,6 +3,8 @@ defmodule Lilac.AlbumCount do
 
   schema("album_counts") do
     field(:playcount, :integer)
+    field(:first_scrobbled, :utc_datetime)
+    field(:last_scrobbled, :utc_datetime)
 
     belongs_to(:album, Lilac.Album)
     belongs_to(:user, Lilac.User)

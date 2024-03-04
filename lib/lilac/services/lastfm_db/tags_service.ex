@@ -5,6 +5,7 @@ defmodule Lilac.Services.Tags do
 
   alias Lilac.Tag
   alias Lilac.Artist
+  alias Lilac.NestedMap
 
   @spec list(%Tag.Filters{}) :: [Tag.t()]
   def list(filters) do
@@ -87,6 +88,52 @@ defmodule Lilac.Services.Tags do
       query
       |> select([tag: t], %{id: t.id, name: t.name, occurrences: nil})
       |> order_by([tag: t], asc: t.name)
+    end
+  end
+
+  defmodule Conversion do
+    alias Lilac.NestedMap
+    # Tags
+    @spec convert_tags([String.t()]) :: map
+    def convert_tags(tags) do
+      tag_map = generate_tag_map(tags)
+
+      create_missing_tags(tag_map, tags)
+    end
+
+    @spec generate_tag_map([String.t()]) :: map
+    def generate_tag_map(tags) do
+      tags = Enum.uniq(tags)
+
+      query = from(t in Tag, where: t.name in ^tags)
+
+      tags = query |> Lilac.Repo.all()
+
+      add_tags_to_conversion_map(tags, %{})
+    end
+
+    @spec create_missing_tags(map, [String.t()]) :: map
+    def create_missing_tags(conversion_map, tags) do
+      tags = NestedMap.filter_unmapped_keys(conversion_map, Enum.uniq(tags))
+
+      if length(tags) == 0 do
+        conversion_map
+      else
+        new_tags = Enum.map(tags, fn t -> %{name: t} end)
+
+        {_, inserted_tags} = Lilac.Repo.insert_all(Tag, new_tags, returning: true)
+
+        add_tags_to_conversion_map(inserted_tags, conversion_map)
+      end
+    end
+
+    @spec add_tags_to_conversion_map([Tag.t()], map) :: map
+    defp add_tags_to_conversion_map(tags, map) do
+      Enum.reduce(
+        tags,
+        map,
+        fn tag, acc -> NestedMap.add(acc, tag.name, tag.id) end
+      )
     end
   end
 end

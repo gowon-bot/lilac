@@ -8,8 +8,8 @@ defmodule LilacWeb.Resolvers.Tags do
           any
         ) :: {:ok, any}
   def tagArtists(_root, %{artists: artists, tags: tags, mark_as_checked: mark_as_checked}, _info) do
-    artists = Lilac.Converting.convert_artists(Enum.map(artists, fn a -> a.name end))
-    tags = Lilac.Converting.convert_tags(Enum.map(tags, fn t -> t.name end))
+    artists = Lilac.Sync.Conversion.convert_artists(Enum.map(artists, fn a -> a.name end))
+    tags = Lilac.Services.Tags.Conversion.convert_tags(Enum.map(tags, fn t -> t.name end))
 
     Tags.tag_artists(Map.values(artists), Map.values(tags), mark_as_checked)
 

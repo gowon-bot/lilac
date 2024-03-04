@@ -4,13 +4,13 @@ defmodule Lilac.Services.Users do
 
   import Ecto.Query, only: [from: 2, where: 3]
 
-  @spec add_is_indexing([User.t()]) :: [User.t()]
-  def add_is_indexing(users) do
+  @spec add_is_user_syncing([User.t()]) :: [User.t()]
+  def add_is_user_syncing(users) do
     users
     |> Enum.map(fn user ->
       %User{
         user
-        | is_indexing: Concurrency.is_user_indexing?(user)
+        | is_syncing: Concurrency.is_user_syncing?(user)
       }
     end)
   end

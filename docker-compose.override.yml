@@ -1,0 +1,15 @@
+# NOTE: Ports should be specified in docker-compose.override.yml
+version: "3.9"
+services:
+  lilac:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - 4000:4000
+
+  mirrorball:
+    ports:
+      - 8080:8080

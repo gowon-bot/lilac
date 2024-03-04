@@ -1,22 +1,19 @@
-defmodule Lilac.ConversionMap do
+defmodule Lilac.NestedMap do
   @moduledoc """
-  ConversionMap holds methods to interact with maps
-  specialized for converting raw entities to ids
+  NestedMap holds methods to interact with maps
+  specialized for converting raw entities' names to ids
 
-  eg. Converting {artist: "WJSN", name: "WJ Please?"}  ->  12467 (id)
+  eg. Converting {artist: "WJSN"}  ->  109 (id)
+  eg. Converting {artist: "WJSN", album: "WJ Please?"}  ->  12467 (id)
 
-  All keys are downcased, and nested entities can safely be accessed
+  *All keys are downcased*, and nested entities can safely be accessed
   """
 
+  @type t() :: map
   @type conversion_key :: String.t() | integer
 
-  @spec add(map, conversion_key, integer) :: map
-  def add(map, key, value) do
-    Map.put(map, clean_key(key), value)
-  end
-
-  @spec add_nested(map, [conversion_key], integer) :: map
-  def add_nested(map, keys, value) do
+  @spec add(map, [conversion_key], integer) :: map
+  def add(map, keys, value) when is_list(keys) do
     keys =
       keys
       |> clean_keys()
@@ -25,24 +22,29 @@ defmodule Lilac.ConversionMap do
     put_in(map, keys, value)
   end
 
+  @spec add(map, conversion_key, integer) :: map
+  def add(map, key, value) do
+    Map.put(map, clean_key(key), value)
+  end
+
+  @spec has?(map, [conversion_key]) :: boolean
+  def has?(map, keys) when is_list(keys) do
+    get(map, keys) != nil
+  end
+
   @spec has?(map, conversion_key) :: boolean
   def has?(map, key) do
     Map.has_key?(map, clean_key(key))
   end
 
-  @spec has_nested?(map, [conversion_key]) :: boolean
-  def has_nested?(map, keys) do
-    get_nested(map, keys) != nil
+  @spec get(map, [conversion_key]) :: integer
+  def get(map, keys) when is_list(keys) do
+    get_in(map, clean_keys(keys))
   end
 
   @spec get(map, conversion_key) :: integer
   def get(map, key) do
     Map.get(map, clean_key(key))
-  end
-
-  @spec get_nested(map, [conversion_key]) :: integer
-  def get_nested(map, keys) do
-    get_in(map, clean_keys(keys))
   end
 
   @spec filter_unmapped_keys(map, [conversion_key]) :: [conversion_key]

@@ -116,10 +116,11 @@ defmodule LilacWeb.Schema do
   end
 
   mutation do
-    field :index, :string do
+    field :sync, :string do
       arg(:user, :user_input)
+      arg(:force_restart, :boolean)
 
-      resolve(&Resolvers.User.index/3)
+      resolve(&Resolvers.User.sync/3)
     end
 
     field :update, :string do
@@ -188,7 +189,7 @@ defmodule LilacWeb.Schema do
   end
 
   subscription do
-    field :index, :indexing_progress do
+    field :sync, :sync_progress do
       arg(:user, non_null(:user_input))
 
       config(fn args, _ ->
