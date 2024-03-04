@@ -9,7 +9,7 @@ defmodule Lilac.Services.GuildMembers do
     user = Lilac.Repo.get_by!(User, %{discord_id: discord_id})
 
     case %Lilac.GuildMember{guild_id: guild_id, user: user}
-         |> Lilac.Repo.insert(returning: true) do
+         |> Lilac.Repo.insert(returning: true, on_conflict: :nothing) do
       {:err, _} -> nil
       {:ok, guild_member} -> guild_member
     end
