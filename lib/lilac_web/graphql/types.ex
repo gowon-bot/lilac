@@ -90,6 +90,8 @@ defmodule LilacWeb.Schema.Types do
   object :album_count do
     field(:album, non_null(:album))
     field(:playcount, non_null(:integer))
+    field(:first_scrobbled, :date)
+    field(:last_scrobbled, :date)
 
     field(:user, non_null(:user))
   end
@@ -97,6 +99,8 @@ defmodule LilacWeb.Schema.Types do
   object :track_count do
     field(:track, non_null(:track))
     field(:playcount, non_null(:integer))
+    field(:first_scrobbled, :date)
+    field(:last_scrobbled, :date)
 
     field(:user, non_null(:user))
   end
