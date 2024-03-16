@@ -15,12 +15,14 @@ defmodule LilacWeb.Schema.Types do
   end
 
   object :album do
-    field(:name, non_null(:id))
+    field(:id, non_null(:id))
+    field(:name, non_null(:string))
     field(:artist, :artist)
   end
 
   object :track do
-    field(:name, non_null(:id))
+    field(:id, non_null(:id))
+    field(:name, non_null(:string))
     field(:artist, non_null(:artist))
     field(:album, :album)
   end
@@ -108,6 +110,8 @@ defmodule LilacWeb.Schema.Types do
   object :ambiguous_track_count do
     field(:track, non_null(:ambiguous_track))
     field(:playcount, non_null(:integer))
+    field(:first_scrobbled, :date)
+    field(:last_scrobbled, :date)
 
     field(:user, non_null(:user))
   end
@@ -218,8 +222,18 @@ defmodule LilacWeb.Schema.Types do
     field(:pagination, non_null(:pagination))
   end
 
+  object(:ambiguous_tracks_page) do
+    field(:tracks, non_null(list_of(non_null(:ambiguous_track))))
+    field(:pagination, non_null(:pagination))
+  end
+
   object(:track_counts_page) do
     field(:track_counts, non_null(list_of(non_null(:track_count))))
+    field(:pagination, non_null(:pagination))
+  end
+
+  object(:ambiguous_track_counts_page) do
+    field(:track_counts, non_null(list_of(non_null(:ambiguous_track_count))))
     field(:pagination, non_null(:pagination))
   end
 

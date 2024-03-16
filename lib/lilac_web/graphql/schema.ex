@@ -49,10 +49,22 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.Tracks.list/3)
     end
 
+    field :ambiguous_tracks, non_null(:ambiguous_tracks_page) do
+      arg(:filters, :tracks_filters)
+
+      resolve(&Resolvers.Tracks.list_ambiguous/3)
+    end
+
     field :track_counts, non_null(:track_counts_page) do
       arg(:filters, :track_counts_filters)
 
       resolve(&Resolvers.Tracks.list_counts/3)
+    end
+
+    field :ambiguous_track_counts, non_null(:ambiguous_track_counts_page) do
+      arg(:filters, :track_counts_filters)
+
+      resolve(&Resolvers.Tracks.list_ambiguous_counts/3)
     end
 
     field :tags, non_null(:tags_page) do

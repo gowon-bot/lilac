@@ -9,16 +9,6 @@ defmodule Lilac.TrackCount do
     belongs_to(:track, Lilac.Track)
     belongs_to(:user, Lilac.User)
   end
-
-  defmodule Lilac.TrackCount.Ambiguous do
-    defstruct [:track, :playcount, :user]
-
-    @type t() :: %__MODULE__{
-            track: Lilac.Track.Ambiguous.t(),
-            playcount: integer,
-            user: Lilac.User.t()
-          }
-  end
 end
 
 defmodule Lilac.TrackCount.Page do
