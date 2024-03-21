@@ -19,5 +19,7 @@ defmodule Lilac.Album do
 
     has_many :tracks, Lilac.Track
     has_many :album_counts, Lilac.AlbumCount
+
+    many_to_many :rym_albums, Lilac.RYM.Album, join_through: "rate_your_music_album_albums"
   end
 end

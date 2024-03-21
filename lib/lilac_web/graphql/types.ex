@@ -116,6 +116,25 @@ defmodule LilacWeb.Schema.Types do
     field(:user, non_null(:user))
   end
 
+  # RYM
+  object :rating do
+    field(:rating, non_null(:integer))
+    field(:rate_your_music_album, non_null(:rate_your_music_album))
+  end
+
+  object :rate_your_music_album do
+    field(:rate_your_music_id, non_null(:string))
+    field(:title, non_null(:string))
+    field(:release_year, :integer)
+    field(:artist_name, non_null(:string))
+    field(:artist_native_name, :string)
+  end
+
+  object :rate_your_music_artist do
+    field(:artist_name, non_null(:string))
+    field(:artist_native_name, :string)
+  end
+
   # Who knows
   object :who_knows_row do
     field(:user, non_null(:user))
@@ -242,6 +261,11 @@ defmodule LilacWeb.Schema.Types do
     field(:pagination, non_null(:pagination))
   end
 
+  object(:ratings_page) do
+    field(:ratings, non_null(list_of(non_null(:rating))))
+    field(:pagination, :pagination)
+  end
+
   object(:pagination) do
     field(:current_page, non_null(:integer))
     field(:total_pages, non_null(:integer))
@@ -363,5 +387,12 @@ defmodule LilacWeb.Schema.Types do
     field(:pagination, :page_input)
 
     field(:fetch_tags_for_missing, :boolean)
+  end
+
+  input_object :ratings_filters do
+    field(:user, :user_input)
+    field(:album, :album_input)
+    field(:pagination, :page_input)
+    field(:rating, :integer)
   end
 end
