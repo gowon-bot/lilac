@@ -87,6 +87,18 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.RYM.list_ratings/3)
     end
 
+    field :artist_ratings, non_null(:artist_ratings_page) do
+      arg(:filters, :artist_ratings_filters)
+
+      resolve(&Resolvers.RYM.list_artist_ratings/3)
+    end
+
+    field :rate_your_music_artist, :rate_your_music_artist do
+      arg(:keywords, non_null(:string))
+
+      resolve(&Resolvers.RYM.rate_your_music_artist/3)
+    end
+
     # Who knows
     field :who_knows_artist, non_null(:who_knows_artist_response) do
       arg(:artist, :artist_input)

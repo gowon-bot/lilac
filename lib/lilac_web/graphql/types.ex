@@ -122,6 +122,13 @@ defmodule LilacWeb.Schema.Types do
     field(:rate_your_music_album, non_null(:rate_your_music_album))
   end
 
+  object :artist_rating do
+    field(:average_rating, non_null(:float))
+    field(:album_count, non_null(:integer))
+    field(:user_count, non_null(:integer))
+    field(:artist, non_null(:rate_your_music_artist))
+  end
+
   object :rate_your_music_album do
     field(:rate_your_music_id, non_null(:string))
     field(:title, non_null(:string))
@@ -131,7 +138,7 @@ defmodule LilacWeb.Schema.Types do
   end
 
   object :rate_your_music_artist do
-    field(:artist_name, non_null(:string))
+    field(:artist_name, :string)
     field(:artist_native_name, :string)
   end
 
@@ -266,6 +273,11 @@ defmodule LilacWeb.Schema.Types do
     field(:pagination, :pagination)
   end
 
+  object(:artist_ratings_page) do
+    field(:ratings, non_null(list_of(non_null(:artist_rating))))
+    field(:pagination, :pagination)
+  end
+
   object(:pagination) do
     field(:current_page, non_null(:integer))
     field(:total_pages, non_null(:integer))
@@ -394,5 +406,12 @@ defmodule LilacWeb.Schema.Types do
     field(:album, :album_input)
     field(:pagination, :page_input)
     field(:rating, :integer)
+  end
+
+  input_object :artist_ratings_filters do
+    field(:artist, :artist_input)
+    field(:users, list_of(non_null(:user_input)))
+    field(:guild_id, :string)
+    field(:pagination, :page_input)
   end
 end

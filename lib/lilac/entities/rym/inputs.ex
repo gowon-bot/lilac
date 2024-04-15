@@ -8,6 +8,7 @@ defmodule Lilac.RYM.Rating.Filters do
           rating: integer() | nil
         }
 
-  def has_user?(%{user: nil}), do: false
-  def has_user?(%{user: _}), do: true
+  def has_user?(filters) do
+    Map.has_key?(filters, :user) || Map.has_key?(filters, :users)
+  end
 end
