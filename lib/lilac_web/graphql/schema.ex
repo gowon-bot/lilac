@@ -49,10 +49,22 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.Tracks.list/3)
     end
 
+    field :ambiguous_tracks, non_null(:ambiguous_tracks_page) do
+      arg(:filters, :tracks_filters)
+
+      resolve(&Resolvers.Tracks.list_ambiguous/3)
+    end
+
     field :track_counts, non_null(:track_counts_page) do
       arg(:filters, :track_counts_filters)
 
       resolve(&Resolvers.Tracks.list_counts/3)
+    end
+
+    field :ambiguous_track_counts, non_null(:ambiguous_track_counts_page) do
+      arg(:filters, :track_counts_filters)
+
+      resolve(&Resolvers.Tracks.list_ambiguous_counts/3)
     end
 
     field :tags, non_null(:tags_page) do
@@ -68,6 +80,25 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.Scrobbles.list/3)
     end
 
+    # Ratings
+    field :ratings, non_null(:ratings_page) do
+      arg(:filters, :ratings_filters)
+
+      resolve(&Resolvers.RYM.list_ratings/3)
+    end
+
+    field :artist_ratings, non_null(:artist_ratings_page) do
+      arg(:filters, :artist_ratings_filters)
+
+      resolve(&Resolvers.RYM.list_artist_ratings/3)
+    end
+
+    field :rate_your_music_artist, :rate_your_music_artist do
+      arg(:keywords, non_null(:string))
+
+      resolve(&Resolvers.RYM.rate_your_music_artist/3)
+    end
+
     # Who knows
     field :who_knows_artist, non_null(:who_knows_artist_response) do
       arg(:artist, :artist_input)
@@ -77,8 +108,8 @@ defmodule LilacWeb.Schema do
     end
 
     field :who_knows_artist_rank, non_null(:who_knows_artist_rank) do
-      arg(:artist, :artist_input)
-      arg(:user, :user_input)
+      arg(:artist, non_null(:artist_input))
+      arg(:user, non_null(:user_input))
       arg(:settings, :who_knows_input)
 
       resolve(&Resolvers.WhoKnows.who_knows_artist_rank/3)
@@ -92,8 +123,8 @@ defmodule LilacWeb.Schema do
     end
 
     field :who_knows_album_rank, non_null(:who_knows_album_rank) do
-      arg(:album, :album_input)
-      arg(:user, :user_input)
+      arg(:album, non_null(:album_input))
+      arg(:user, non_null(:user_input))
       arg(:settings, :who_knows_input)
 
       resolve(&Resolvers.WhoKnows.who_knows_album_rank/3)
@@ -107,19 +138,36 @@ defmodule LilacWeb.Schema do
     end
 
     field :who_knows_track_rank, non_null(:who_knows_track_rank) do
-      arg(:track, :track_input)
-      arg(:user, :user_input)
+      arg(:track, non_null(:track_input))
+      arg(:user, non_null(:user_input))
       arg(:settings, :who_knows_input)
 
       resolve(&Resolvers.WhoKnows.who_knows_track_rank/3)
     end
+
+    # Who first
+    field :who_first_artist, non_null(:who_first_artist_response) do
+      arg(:artist, :artist_input)
+      arg(:settings, :who_first_input)
+
+      resolve(&Resolvers.WhoFirst.who_first_artist/3)
+    end
+
+    field :who_first_artist_rank, non_null(:who_first_artist_rank) do
+      arg(:artist, non_null(:artist_input))
+      arg(:user, non_null(:user_input))
+      arg(:settings, :who_first_input)
+
+      resolve(&Resolvers.WhoFirst.who_first_artist_rank/3)
+    end
   end
 
   mutation do
-    field :index, :string do
+    field :sync, :string do
       arg(:user, :user_input)
+      arg(:force_restart, :boolean)
 
-      resolve(&Resolvers.User.index/3)
+      resolve(&Resolvers.User.sync/3)
     end
 
     field :update, :string do
@@ -188,7 +236,7 @@ defmodule LilacWeb.Schema do
   end
 
   subscription do
-    field :index, :indexing_progress do
+    field :sync, :sync_progress do
       arg(:user, non_null(:user_input))
 
       config(fn args, _ ->

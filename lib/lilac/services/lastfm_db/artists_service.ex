@@ -54,7 +54,10 @@ defmodule Lilac.Services.Artists do
   @spec parse_artist_count_filters(Ecto.Query.t(), ArtistCount.Filters.t()) :: Ecto.Query.t()
   defp parse_artist_count_filters(query, filters) do
     query
-    |> InputParser.Artist.maybe_in_artist_list(Map.get(filters, :inputs), Map.get(filters, :tags))
+    |> InputParser.Artist.maybe_in_artist_list(
+      Map.get(filters, :artists),
+      Map.get(filters, :tags)
+    )
     |> InputParser.maybe_page_input(Map.get(filters, :pagination))
     |> InputParser.User.maybe_user_inputs(Map.get(filters, :users))
   end

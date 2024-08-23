@@ -9,15 +9,15 @@ defmodule Lilac.Services.Albums do
     from(l in Album, as: :album)
     |> generate_joins(filters, info)
     |> parse_album_filters(filters)
-    |> select_merge([album: l], %{l | name: coalesce(l.name, "(no album)")})
+    |> select_merge([album: l], %{name: coalesce(l.name, "(no album)")})
     |> Lilac.Repo.all()
   end
 
   @spec count(Album.Filters.t()) :: integer
   def count(filters) do
     from(a in Album, as: :album, select: count())
+    |> generate_joins(filters, %Absinthe.Resolution{}, false)
     |> parse_album_filters(filters |> Map.put(:pagination, nil))
-    |> generate_joins(filters, %Absinthe.Resolution{})
     |> Lilac.Repo.one()
   end
 

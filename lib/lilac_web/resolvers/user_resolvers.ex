@@ -3,14 +3,16 @@ defmodule LilacWeb.Resolvers.User do
 
   alias Lilac.Services.Auth
   alias Lilac.GraphQLHelpers.{Introspection, Fields}
-  alias Lilac.Indexer
+  alias Lilac.Sync.Syncer
 
-  def index(_root, %{user: user_input}, %{context: context}) do
+  def sync(_root, args, %{context: context}) do
+    %{user: user_input, force_restart: force_restart?} = Map.merge(%{force_restart: false}, args)
+
     user = Lilac.Repo.get_by!(Lilac.User, user_input)
 
     if !Auth.is_authorized?(context, user),
       do: Lilac.Errors.Meta.doughnut_id_doesnt_match(),
-      else: Indexer.index(user)
+      else: Syncer.sync(user, force_restart?)
   end
 
   def update(_root, %{user: user_input}, %{context: context}) do
@@ -18,7 +20,7 @@ defmodule LilacWeb.Resolvers.User do
 
     if !Auth.is_authorized?(context, user),
       do: Lilac.Errors.Meta.doughnut_id_doesnt_match(),
-      else: Indexer.update(user)
+      else: Syncer.update(user)
   end
 
   def users(_root, %{filters: user_input}, info) do
@@ -26,8 +28,8 @@ defmodule LilacWeb.Resolvers.User do
 
     users = Lilac.Repo.all(query)
 
-    if Introspection.has_field?(info, Fields.User.is_indexing()) do
-      {:ok, Lilac.Services.Users.add_is_indexing(users)}
+    if Introspection.has_field?(info, Fields.User.is_syncing()) do
+      {:ok, Lilac.Services.Users.add_is_user_syncing(users)}
     else
       {:ok, users}
     end

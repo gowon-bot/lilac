@@ -9,12 +9,13 @@ defmodule Lilac.User.Input do
 end
 
 defmodule Lilac.User.Modifications do
-  defstruct [:username, :discord_id, :privacy, :last_fm_session]
+  defstruct [:username, :discord_id, :privacy, :last_fm_session, :has_premium]
 
   @type t() :: %__MODULE__{
           username: binary | nil,
           discord_id: binary | nil,
           privacy: integer | nil,
-          last_fm_session: binary | nil
+          last_fm_session: binary | nil,
+          has_premium: binary | nil
         }
 end

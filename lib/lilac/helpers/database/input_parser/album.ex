@@ -27,18 +27,4 @@ defmodule Lilac.InputParser.Album do
       query
     end
   end
-
-  @spec maybe_album_inputs(Query.t(), [Lilac.Album.Input.t()]) :: Query.t()
-  def maybe_album_inputs(query, inputs) do
-    if is_nil(inputs) || length(inputs) == 0 do
-      query
-    else
-      input_names =
-        inputs
-        |> Enum.map(fn input -> Map.get(input, :name) end)
-        |> Enum.filter(fn n -> !is_nil(n) end)
-
-      query |> where([artist: a], a.name in ^input_names)
-    end
-  end
 end

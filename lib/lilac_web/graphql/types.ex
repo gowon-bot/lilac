@@ -15,12 +15,14 @@ defmodule LilacWeb.Schema.Types do
   end
 
   object :album do
-    field(:name, non_null(:id))
+    field(:id, non_null(:id))
+    field(:name, non_null(:string))
     field(:artist, :artist)
   end
 
   object :track do
-    field(:name, non_null(:id))
+    field(:id, non_null(:id))
+    field(:name, non_null(:string))
     field(:artist, non_null(:artist))
     field(:album, :album)
   end
@@ -35,9 +37,10 @@ defmodule LilacWeb.Schema.Types do
     field(:username, non_null(:string))
     field(:discord_id, non_null(:string))
     field(:privacy, non_null(:privacy))
+    field(:has_premium, non_null(:boolean))
 
-    field(:last_indexed, :date)
-    field(:is_indexing, :boolean)
+    field(:last_synced, :date)
+    field(:is_syncing, :boolean)
   end
 
   object :guild_member do
@@ -68,17 +71,20 @@ defmodule LilacWeb.Schema.Types do
     value(:unset, description: "Default value; same as private")
   end
 
-  # Indexing
-  object :indexing_progress do
-    field(:page, non_null(:integer))
-    field(:total_pages, non_null(:integer))
+  # Sync
+  object :sync_progress do
     field(:action, non_null(:string))
+    field(:stage, non_null(:string))
+    field(:current, non_null(:integer))
+    field(:total, non_null(:integer))
   end
 
   # Counts
   object :artist_count do
     field(:artist, non_null(:artist))
     field(:playcount, non_null(:integer))
+    field(:first_scrobbled, :date)
+    field(:last_scrobbled, :date)
 
     field(:user, non_null(:user))
   end
@@ -86,6 +92,8 @@ defmodule LilacWeb.Schema.Types do
   object :album_count do
     field(:album, non_null(:album))
     field(:playcount, non_null(:integer))
+    field(:first_scrobbled, :date)
+    field(:last_scrobbled, :date)
 
     field(:user, non_null(:user))
   end
@@ -93,6 +101,8 @@ defmodule LilacWeb.Schema.Types do
   object :track_count do
     field(:track, non_null(:track))
     field(:playcount, non_null(:integer))
+    field(:first_scrobbled, :date)
+    field(:last_scrobbled, :date)
 
     field(:user, non_null(:user))
   end
@@ -100,8 +110,36 @@ defmodule LilacWeb.Schema.Types do
   object :ambiguous_track_count do
     field(:track, non_null(:ambiguous_track))
     field(:playcount, non_null(:integer))
+    field(:first_scrobbled, :date)
+    field(:last_scrobbled, :date)
 
     field(:user, non_null(:user))
+  end
+
+  # RYM
+  object :rating do
+    field(:rating, non_null(:integer))
+    field(:rate_your_music_album, non_null(:rate_your_music_album))
+  end
+
+  object :artist_rating do
+    field(:average_rating, non_null(:float))
+    field(:album_count, non_null(:integer))
+    field(:user_count, non_null(:integer))
+    field(:artist, non_null(:rate_your_music_artist))
+  end
+
+  object :rate_your_music_album do
+    field(:rate_your_music_id, non_null(:string))
+    field(:title, non_null(:string))
+    field(:release_year, :integer)
+    field(:artist_name, non_null(:string))
+    field(:artist_native_name, :string)
+  end
+
+  object :rate_your_music_artist do
+    field(:artist_name, :string)
+    field(:artist_native_name, :string)
   end
 
   # Who knows
@@ -158,6 +196,27 @@ defmodule LilacWeb.Schema.Types do
     field(:below, :ambiguous_track_count)
   end
 
+  # Who first
+  object :who_first_row do
+    field(:user, non_null(:user))
+    field(:first_scrobbled, non_null(:date))
+    field(:last_scrobbled, non_null(:date))
+  end
+
+  object :who_first_artist_response do
+    field(:rows, non_null(list_of(non_null(:who_first_row))))
+    field(:artist, non_null(:artist))
+  end
+
+  object :who_first_artist_rank do
+    field(:artist, :artist)
+
+    field(:rank, non_null(:integer))
+    field(:first_scrobbled, non_null(:date))
+    field(:last_scrobbled, non_null(:date))
+    field(:total_listeners, non_null(:integer))
+  end
+
   # Pages
   object(:scrobbles_page) do
     field(:scrobbles, non_null(list_of(non_null(:scrobble))))
@@ -189,14 +248,34 @@ defmodule LilacWeb.Schema.Types do
     field(:pagination, non_null(:pagination))
   end
 
+  object(:ambiguous_tracks_page) do
+    field(:tracks, non_null(list_of(non_null(:ambiguous_track))))
+    field(:pagination, non_null(:pagination))
+  end
+
   object(:track_counts_page) do
     field(:track_counts, non_null(list_of(non_null(:track_count))))
+    field(:pagination, non_null(:pagination))
+  end
+
+  object(:ambiguous_track_counts_page) do
+    field(:track_counts, non_null(list_of(non_null(:ambiguous_track_count))))
     field(:pagination, non_null(:pagination))
   end
 
   object(:tags_page) do
     field(:tags, non_null(list_of(non_null(:tag))))
     field(:pagination, non_null(:pagination))
+  end
+
+  object(:ratings_page) do
+    field(:ratings, non_null(list_of(non_null(:rating))))
+    field(:pagination, :pagination)
+  end
+
+  object(:artist_ratings_page) do
+    field(:ratings, non_null(list_of(non_null(:artist_rating))))
+    field(:pagination, :pagination)
   end
 
   object(:pagination) do
@@ -223,6 +302,13 @@ defmodule LilacWeb.Schema.Types do
     field(:guild_id, :string)
     field(:limit, :integer)
     field(:user_ids, list_of(non_null(:string)))
+  end
+
+  input_object :who_first_input do
+    field(:guild_id, :string)
+    field(:limit, :integer)
+    field(:user_ids, list_of(non_null(:string)))
+    field(:reverse, :boolean)
   end
 
   # Music entities
@@ -255,6 +341,7 @@ defmodule LilacWeb.Schema.Types do
     field(:discord_id, :string)
     field(:privacy, :privacy)
     field(:last_fm_session, :privacy)
+    field(:has_premium, :boolean)
   end
 
   # Filters
@@ -312,5 +399,19 @@ defmodule LilacWeb.Schema.Types do
     field(:pagination, :page_input)
 
     field(:fetch_tags_for_missing, :boolean)
+  end
+
+  input_object :ratings_filters do
+    field(:user, :user_input)
+    field(:album, :album_input)
+    field(:pagination, :page_input)
+    field(:rating, :integer)
+  end
+
+  input_object :artist_ratings_filters do
+    field(:artist, :artist_input)
+    field(:users, list_of(non_null(:user_input)))
+    field(:guild_id, :string)
+    field(:pagination, :page_input)
   end
 end
