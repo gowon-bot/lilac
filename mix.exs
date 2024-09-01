@@ -5,9 +5,8 @@ defmodule Lilac.MixProject do
     [
       app: :lilac,
       version: "0.1.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -33,25 +32,26 @@ defmodule Lilac.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.6.7"},
-      {:phoenix_ecto, "~> 4.4"},
+      {:phoenix, "~> 1.7.14"},
+      {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
-      {:phoenix_live_dashboard, "~> 0.6"},
-      {:swoosh, "~> 1.3"},
-      {:telemetry_metrics, "~> 0.6"},
+      {:swoosh, "~> 1.5"},
+      {:finch, "~> 0.13"},
+      {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.18"},
+      {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"},
-      {:absinthe, "~> 1.6"},
+      {:dns_cluster, "~> 0.1.1"},
+      {:bandit, "~> 1.5"},
       {:absinthe_plug, "~> 1.5"},
-      {:httpoison, "~> 1.8"},
-      {:poison, "~> 5.0"},
-      {:timex, "~> 3.7"},
+      # Provides socket support for Absinthe subscriptions
       {:absinthe_phoenix, "~> 2.0.0"},
-      {:cors_plug, "~> 3.0"},
-      {:redix, "~> 1.1"}
+      {:httpoison, "~> 2.0"},
+      {:timex, "~> 3.7"},
+      {:poison, "~> 6.0"},
+      {:redix, "~> 1.1"},
+      {:cors_plug, "~> 3.0"}
     ]
   end
 

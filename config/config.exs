@@ -8,26 +8,19 @@
 import Config
 
 config :lilac,
-  ecto_repos: [Lilac.Repo]
+  ecto_repos: [Lilac.Repo],
+  generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
 config :lilac, LilacWeb.Endpoint,
   url: [host: "localhost"],
-  render_errors: [view: LilacWeb.ErrorView, accepts: ~w(json), layout: false],
+  adapter: Bandit.PhoenixAdapter,
+  render_errors: [
+    formats: [json: LilacWeb.ErrorJSON],
+    layout: false
+  ],
   pubsub_server: Lilac.PubSub,
-  live_view: [signing_salt: "spJxXcE4"]
-
-# Configures the mailer
-#
-# By default it uses the "Local" adapter which stores the emails
-# locally. You can see the emails in your browser, at "/dev/mailbox".
-#
-# For production it's recommended to configure a different adapter
-# at the `config/runtime.exs`.
-config :lilac, Lilac.Mailer, adapter: Swoosh.Adapters.Local
-
-# Swoosh API client is needed for adapters other than SMTP.
-config :swoosh, :api_client, false
+  live_view: [signing_salt: "+r+lSG1n"]
 
 # Configures Elixir's Logger
 config :logger, :console,
