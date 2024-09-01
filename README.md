@@ -1,18 +1,30 @@
 # Lilac
 
-To start your Phoenix server:
+_너도 언젠가 날 잊게 될까?_
 
-  * Run `mix setup` to install and setup dependencies
-  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+This project is part of Gowon bot ([main repo](https://github.com/gowon-bot/gowon))
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+## Setup
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+To setup, fill out `config/[env].exs`. Use `prod.exs` for production, and `dev.exs` for development.
 
-## Learn more
+To set up the database, make sure the config is filled out:
 
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+- Run `mix ecto.create`
+- Run `mix ecto.migrate`
+
+Download and build the mirrorball image from [gowon-bot/mirrorball](https://github.com/gowon-bot/mirrorball)
+
+Then Lilac and Mirrorball can be brought up with Docker Compose
+
+## Structure
+
+### Syncing
+
+Lilac syncing leverages Elixir's OTP integration to dynamically spin up new indexing instances. [`Syncer`](lib/lilac/servers/sync/syncer.ex) supervises [`Sync.Supervisor`](lib/lilac/servers/sync/supervisor.ex) instances, which also have children to handle scrobble fetching, converting, inserting, and progress updating.
+
+## Any questions?
+
+Somethings broken? Just curious how something works?
+
+Feel free to shoot me a Discord dm at @mahjogn or join the support server! https://discord.gg/9Vr7Df7TZf

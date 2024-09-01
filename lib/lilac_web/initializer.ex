@@ -10,6 +10,7 @@ defmodule LilacWeb.Initializer do
     IO.puts(
       IO.ANSI.cyan() <>
         """
+
         888       d8b  888
         888       Y8P  888
         888            888
