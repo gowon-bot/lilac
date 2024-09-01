@@ -22,8 +22,8 @@ defmodule LilacWeb.Resolvers.RYM do
     {:ok, RYM.Artist.Rating.Page.generate(ratings, info, filters)}
   end
 
-  @spec stats(any, %{filters: RYM.Stats.Filters.t()}) :: {:ok, RYM.Stats.t()}
-  def stats(_root, %{filters: filters}) do
-    {:ok, Lilac.Services.Ratings.stats(filters)}
-  end
+  # @spec stats(any, %{filters: RYM.Stats.Filters.t()}) :: {:ok, RYM.Stats.t()}
+  # def stats(_root, %{filters: filters}) do
+  #   {:ok, Lilac.Services.Ratings.stats(filters)}
+  # end
 end

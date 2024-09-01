@@ -19,15 +19,15 @@ defmodule LilacWeb.ConnCase do
 
   using do
     quote do
+      # The default endpoint for testing
+      @endpoint LilacWeb.Endpoint
+
+      use LilacWeb, :verified_routes
+
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
       import LilacWeb.ConnCase
-
-      alias LilacWeb.Router.Helpers, as: Routes
-
-      # The default endpoint for testing
-      @endpoint LilacWeb.Endpoint
     end
   end
 
