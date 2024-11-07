@@ -23,3 +23,8 @@ config :lilac,
 # Redis config
 config :lilac,
   redis_host: "<your redis host>"
+
+# Supernova config
+config :lilac,
+  supernova_url: "",
+  supernova_password: "Must match the value in the Supernova config"
