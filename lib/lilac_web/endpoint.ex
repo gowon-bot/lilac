@@ -1,4 +1,5 @@
 defmodule LilacWeb.Endpoint do
+  use Plug.ErrorHandler
   use Phoenix.Endpoint, otp_app: :lilac
   use Absinthe.Phoenix.Endpoint
 
@@ -50,6 +51,16 @@ defmodule LilacWeb.Endpoint do
   plug LilacWeb.Plugs.Auth
   plug LilacWeb.Plugs.Context
 
-  plug Absinthe.Plug,
-    schema: LilacWeb.Schema
+  plug Absinthe.Plug, schema: LilacWeb.Schema
+
+  @impl Plug.ErrorHandler
+  def handle_errors(conn, error) do
+    send_resp(
+      conn,
+      conn.status,
+      error
+      |> LilacWeb.ErrorReporter.handle_error()
+      |> Jason.encode!()
+    )
+  end
 end
