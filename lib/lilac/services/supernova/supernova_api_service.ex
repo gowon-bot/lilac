@@ -2,7 +2,7 @@ defmodule Lilac.Supernova.API do
   use HTTPoison.Base
 
   def process_request_url(path) do
-    Application.fetch_env!(:lilac, :supernova_url) <> "api/" <> path
+    Application.fetch_env!(:lilac, :supernova_url) <> path
   end
 
   def process_request_headers(headers) do
