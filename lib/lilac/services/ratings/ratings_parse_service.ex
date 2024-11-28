@@ -2,8 +2,12 @@ defmodule Lilac.Ratings.Parse do
   alias Lilac.Ratings.Parse.Types.RawRatingRow
   alias Lilac.Lilac.Sync.Conversion.Cache
 
-  @localized_artist_names_regex ~r/\[([^\]]+)\]/
-  @unlocalized_artist_names_regex ~r/\[([^\]]+)\]/
+  @localized_parts_regex ~r/\[(.*?)\]/
+  @unlocalized_parts_regex ~r/(.*?)\s*\[.*?\]/
+
+  @separators_regex ~r/( & |, | \/ | \+ | X | x)/
+  @separators_no_brackets_regex ~r/( & |, | \/ | \+ | X | x )(?![^\[]*\])/
+
   @title_brackets_regex ~r/^(.*) \((.*)\)$/
 
   # Since we're generating all possible combinations of artists and titles
@@ -23,15 +27,22 @@ defmodule Lilac.Ratings.Parse do
     rating: "Rating"
   }
 
-  @spec parse_csv(String.t()) :: [RawRatingRow.t()]
+  @spec parse_csv(String.t()) :: {:ok, [RawRatingRow.t()]} | {:error, String.t()}
   def parse_csv(csvstring) do
-    csvstring
-    |> String.split("\n")
-    |> Stream.map(&(&1 <> "\n"))
-    |> CSV.decode!(headers: true, unredact_exceptions: true, field_transform: &String.trim/1)
-    |> Enum.to_list()
-    |> only_rated_rows()
-    |> Enum.map(&parse_row/1)
+    if !headers_correct?(csvstring) do
+      Lilac.Errors.Ratings.csv_not_in_correct_format()
+    else
+      {
+        :ok,
+        csvstring
+        |> String.split("\n")
+        |> Stream.map(&(&1 <> "\n"))
+        |> CSV.decode!(headers: true, unredact_exceptions: true, field_transform: &String.trim/1)
+        |> Enum.to_list()
+        |> only_rated_rows()
+        |> Enum.map(&parse_row/1)
+      }
+    end
   end
 
   @spec generate_album_combinations(RawRatingRow.t()) :: [Cache.raw_album()]
@@ -99,16 +110,6 @@ defmodule Lilac.Ratings.Parse do
     end
   end
 
-  # @spec remove_localized_artist_names(String.t()) :: String.t()
-  # defp remove_localized_artist_names(artist_name) do
-  #   Regex.replace(@localized_artist_names_regex, artist_name, "\\1") |> String.trim()
-  # end
-
-  # @spec remove_unlocalized_artist_names(String.t()) :: String.t()
-  # defp remove_unlocalized_artist_names(artist_name) do
-  #   Regex.replace(@unlocalized_artist_names_regex, artist_name, "") |> String.trim()
-  # end
-
   @spec add_raw_artists([{[String.t()], String.t()}], RawRatingRow.t()) :: [
           {[String.t()], String.t()}
         ]
@@ -171,13 +172,12 @@ defmodule Lilac.Ratings.Parse do
 
   @spec split_on_common_separators(String.t()) :: [String.t()]
   defp split_on_common_separators(artist_name) do
-    ~r/( & |, | \/ | \+ | X | x)/ |> Regex.split(artist_name)
+    @separators_regex |> Regex.split(artist_name)
   end
 
   @spec split_on_common_separators_no_brackets(String.t()) :: [String.t()]
   defp split_on_common_separators_no_brackets(artist_name) do
-    regex = ~r/( & |, | \/ | \+ | X | x )(?![^\[]*\])/
-    Regex.split(regex, artist_name)
+    Regex.split(@separators_no_brackets_regex, artist_name)
   end
 
   @spec split_on_and(String.t()) :: [String.t()]
@@ -230,7 +230,7 @@ defmodule Lilac.Ratings.Parse do
 
     localized_parts =
       Enum.map(parts, fn part ->
-        case Regex.run(~r/\[(.*?)\]/, part) do
+        case Regex.run(@localized_parts_regex, part) do
           [_, unlocalized] -> unlocalized
           _ -> part
         end
@@ -238,7 +238,7 @@ defmodule Lilac.Ratings.Parse do
 
     unlocalized_parts =
       Enum.map(parts, fn part ->
-        case Regex.run(~r/(.*?)\s*\[.*?\]/, part) do
+        case Regex.run(@unlocalized_parts_regex, part) do
           [_, localized] -> localized
           _ -> part
         end
@@ -253,11 +253,23 @@ defmodule Lilac.Ratings.Parse do
   @spec join_with_separators([String.t()], String.t()) :: String.t()
   defp join_with_separators(parts, original_string) do
     separators =
-      Regex.scan(~r/( & |, | \/ | \+ | X | x )(?![^\[]*\])/, original_string)
+      Regex.scan(@separators_no_brackets_regex, original_string)
       |> Enum.map(fn [match, _] -> match end)
 
     Enum.zip(parts, separators ++ [""])
     |> Enum.map(fn {part, sep} -> part <> sep end)
     |> Enum.join()
+  end
+
+  @spec headers_correct?(String.t()) :: boolean()
+  defp headers_correct?(csvstring) do
+    headers =
+      csvstring
+      |> String.split("\n")
+      |> List.first()
+      |> String.split(",")
+      |> Enum.map(&String.trim/1)
+
+    Enum.all?(@headers, fn {_, value} -> Enum.member?(headers, value) end)
   end
 end

@@ -2,7 +2,7 @@ defmodule Lilac.Ratings.Import.Worker do
   use GenServer
 
   alias Lilac.Ratings
-  alias Lilac.Ratings.Import.Registry
+  alias Lilac.Ratings.Import.{Registry, Subscriptions}
 
   def start_link(user) do
     GenServer.start_link(__MODULE__, user, name: Registry.worker(user))
@@ -24,13 +24,21 @@ defmodule Lilac.Ratings.Import.Worker do
   @impl true
   def handle_cast({:import, csv}, %{user: user}) do
     case Ratings.Parse.parse_csv(csv) do
-      [] ->
-        {:stop, :invalid_csv}
+      {:error, reason} ->
+        Subscriptions.error(user.id, reason)
+        {:stop, :normal, %{user: user}}
 
-      ratings ->
+      {:ok, []} ->
+        Subscriptions.error(user.id, "No ratings found!")
+        {:stop, :normal, %{user: user}}
+
+      {:ok, ratings} ->
+        Subscriptions.update(user.id, :started, length(ratings))
+
         Ratings.clear_ratings(user)
-        save_ratings(user, ratings)
-        IO.puts("Imported #{Enum.count(ratings)} ratings for user #{user.id}")
+        saved_count = save_ratings(user, ratings)
+
+        Subscriptions.update(user.id, :finished, saved_count)
         {:stop, :normal, %{user: user}}
     end
   end

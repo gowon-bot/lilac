@@ -255,5 +255,17 @@ defmodule LilacWeb.Schema do
 
       resolve(fn progress, _, _ -> {:ok, progress} end)
     end
+
+    field :ratings_import, :ratings_import_progress do
+      arg(:user, non_null(:user_input))
+
+      config(fn args, _ ->
+        user = Lilac.Repo.get_by!(Lilac.User, args.user)
+
+        {:ok, topic: "#{user.id}"}
+      end)
+
+      resolve(fn progress, _, _ -> {:ok, progress} end)
+    end
   end
 end
