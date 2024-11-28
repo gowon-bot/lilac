@@ -26,7 +26,8 @@ defmodule Lilac.Services.Users do
       Lilac.Repo.insert!(%User{
         discord_id: discord_id,
         username: username,
-        last_fm_session: last_fm_session
+        last_fm_session: last_fm_session,
+        privacy: 5
       })
     else
       modify(user, %{last_fm_session: last_fm_session, username: username})
