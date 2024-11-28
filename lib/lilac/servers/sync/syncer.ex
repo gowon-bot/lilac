@@ -44,7 +44,7 @@ defmodule Lilac.Sync.Syncer do
   defp start_child(user) do
     DynamicSupervisor.start_child(__MODULE__, %{
       id: Lilac.Sync.Supervisor,
-      start: {Lilac.Sync.Supervisor, :start_link, [user], temporary: true}
+      start: {Lilac.Sync.Supervisor, :start_link, [user]}
     })
   end
 
