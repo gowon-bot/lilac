@@ -70,11 +70,12 @@ defmodule Lilac.Sync.Conversion do
     create_missing_albums(artist_map, album_map, albums, user)
   end
 
-  @spec generate_album_map([Cache.raw_album()], map, Lilac.User.t()) :: map
+  @spec generate_album_map([Cache.raw_album()], map, Lilac.User.t() | nil) :: map
   def generate_album_map(albums, artist_map, user) do
     albums =
       Enum.uniq(albums)
       |> Enum.map(fn album -> raw_album_to_queryable(album, artist_map, user) end)
+      |> Enum.reject(fn album -> is_nil(album.artist_id) end)
 
     albums =
       from(l in Album)
@@ -120,7 +121,7 @@ defmodule Lilac.Sync.Conversion do
     )
   end
 
-  @spec raw_album_to_queryable(Cache.raw_album(), map, Lilac.User.t()) :: map
+  @spec raw_album_to_queryable(Cache.raw_album(), map, Lilac.User.t() | nil) :: map
   defp raw_album_to_queryable({artist, album}, artist_map, user) do
     %{
       artist_id: NestedMap.get(artist_map, artist) || Cache.get_artist_id(user, artist),

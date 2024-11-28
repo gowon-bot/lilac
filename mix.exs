@@ -51,7 +51,8 @@ defmodule Lilac.MixProject do
       {:timex, "~> 3.7"},
       {:poison, "~> 6.0"},
       {:redix, "~> 1.1"},
-      {:cors_plug, "~> 3.0"}
+      {:cors_plug, "~> 3.0"},
+      {:csv, "~> 3.2.1"}
     ]
   end
 

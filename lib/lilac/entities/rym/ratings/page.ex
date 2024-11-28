@@ -1,6 +1,6 @@
 defmodule Lilac.RYM.Rating.Page do
   alias Lilac.RYM
-  alias Lilac.Services.Ratings
+  alias Lilac.Ratings
 
   defstruct [:ratings, :pagination]
 

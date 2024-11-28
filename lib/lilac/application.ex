@@ -18,11 +18,15 @@ defmodule Lilac.Application do
       LilacWeb.Endpoint,
       {Absinthe.Subscription, LilacWeb.Endpoint},
 
-      # Start the sync registry
+      # Start the sync and importer registries
       {Registry, keys: :unique, name: Lilac.Sync.Registry},
+      {Registry, keys: :unique, name: Lilac.Ratings.Import.Registry},
 
       # Start the syncer
-      Lilac.Sync.Syncer
+      Lilac.Sync.Syncer,
+
+      # Start the ratings importer
+      Lilac.Ratings.Import.Importer
     ]
 
     LilacWeb.Initializer.initialize()
