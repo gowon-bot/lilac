@@ -233,10 +233,30 @@ defmodule LilacWeb.Schema do
 
       resolve(&Resolvers.GuildMember.clear_guild/3)
     end
+
+    # Ratings
+    field :import_ratings, :integer do
+      arg(:user, non_null(:user_input))
+      arg(:ratings_csv, non_null(:string))
+
+      resolve(&Resolvers.RYM.import_ratings/3)
+    end
   end
 
   subscription do
     field :sync, :sync_progress do
+      arg(:user, non_null(:user_input))
+
+      config(fn args, _ ->
+        user = Lilac.Repo.get_by!(Lilac.User, args.user)
+
+        {:ok, topic: "#{user.id}"}
+      end)
+
+      resolve(fn progress, _, _ -> {:ok, progress} end)
+    end
+
+    field :ratings_import, :ratings_import_progress do
       arg(:user, non_null(:user_input))
 
       config(fn args, _ ->

@@ -79,6 +79,13 @@ defmodule LilacWeb.Schema.Types do
     field(:total, non_null(:integer))
   end
 
+  # Ratings import
+  object :ratings_import_progress do
+    field(:stage, non_null(:string))
+    field(:count, :integer)
+    field(:error, :string)
+  end
+
   # Counts
   object :artist_count do
     field(:artist, non_null(:artist))

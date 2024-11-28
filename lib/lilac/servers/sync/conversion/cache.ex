@@ -59,7 +59,10 @@ defmodule Lilac.Sync.Conversion.Cache do
 
   @spec get_artist_id(Lilac.User.t(), binary) :: integer | nil
   def get_artist_id(user, artist) do
-    GenServer.call(Registry.conversion_cache(user), {:get_artist_id, artist})
+    case user do
+      nil -> nil
+      _ -> GenServer.call(Registry.conversion_cache(user), {:get_artist_id, artist})
+    end
   end
 
   @spec get_artist_id(map, Lilac.User.t(), binary) :: integer | nil
