@@ -27,7 +27,7 @@ defmodule Lilac.Services.Users do
         discord_id: discord_id,
         username: username,
         last_fm_session: last_fm_session,
-        privacy: 5
+        privacy: :unset
       })
     else
       modify(user, %{last_fm_session: last_fm_session, username: username})
