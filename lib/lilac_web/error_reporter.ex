@@ -9,16 +9,17 @@ defmodule LilacWeb.ErrorReporter do
   @spec handle_error(%{
           kind: String.t(),
           reason: Exception.t() | term(),
-          stack: Exception.stacktrace()
+          stack: Exception.stacktrace(),
+          user: Lilac.User.t() | nil
         }) ::
           %{error: String.t()} | %{error: String.t(), supernova_id: String.t()}
-  def handle_error(%{kind: kind, reason: error, stack: stack}) do
+  def handle_error(%{kind: kind, reason: error, stack: stack, user: user}) do
     response =
       Lilac.Supernova.report(%Payload{
         application: "Lilac",
         kind: error.__struct__,
         severity: kind,
-        userID: "anonymous",
+        userID: Map.get(user, :discord_id, "anonymous"),
         message: error.message,
         stack: pretty_print_stack(stack),
         tags: []
@@ -36,16 +37,17 @@ defmodule LilacWeb.ErrorReporter do
 
   @spec handle_error(%{
           kind: String.t(),
-          error_struct: struct()
+          error_struct: struct(),
+          user: Lilac.User.t() | nil
         }) ::
           %{error: String.t()} | %{error: String.t(), supernova_id: String.t()}
-  def handle_error(%{kind: kind, error_struct: error}) do
+  def handle_error(%{kind: kind, error_struct: error, user: user}) do
     response =
       Lilac.Supernova.report(%Payload{
         application: "Lilac",
         kind: error.__struct__,
         severity: kind,
-        userID: "anonymous",
+        userID: Map.get(user, :discord_id, "anonymous"),
         message: Map.get(error, :message, "An unknown error occurred"),
         stack: get_stack() |> pretty_print_stack(),
         tags: []

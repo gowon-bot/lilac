@@ -61,7 +61,7 @@ defmodule Lilac.Sync.Subscriptions do
           no_return
   def report_error(action, user, err) do
     supernova_id =
-      case LilacWeb.ErrorReporter.handle_error(%{kind: "error", error_struct: err}) do
+      case LilacWeb.ErrorReporter.handle_error(%{kind: "error", error_struct: err, user: user}) do
         %{supernova_id: id} -> id
         _ -> nil
       end
