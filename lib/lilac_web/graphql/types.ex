@@ -75,8 +75,10 @@ defmodule LilacWeb.Schema.Types do
   object :sync_progress do
     field(:action, non_null(:string))
     field(:stage, non_null(:string))
-    field(:current, non_null(:integer))
-    field(:total, non_null(:integer))
+    field(:current, :integer)
+    field(:total, :integer)
+    field(:error, :string)
+    field(:supernova_id, :string)
   end
 
   # Ratings import
