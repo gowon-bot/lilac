@@ -5,6 +5,26 @@ defmodule Lilac.Sync.Subscriptions do
   @spec update(
           integer,
           Sync.Supervisor.action(),
+          :terminated,
+          binary,
+          binary
+        ) :: no_return
+  def update(user_id, action, :terminated, err, supernova_id) do
+    Absinthe.Subscription.publish(
+      LilacWeb.Endpoint,
+      %{
+        action: action,
+        stage: :terminated,
+        error: err,
+        supernova_id: supernova_id
+      },
+      sync: "#{user_id}"
+    )
+  end
+
+  @spec update(
+          integer,
+          Sync.Supervisor.action(),
           Sync.ProgressReporter.stage(),
           Sync.ProgressReporter.stage_progress()
         ) :: no_return
@@ -21,19 +41,37 @@ defmodule Lilac.Sync.Subscriptions do
     )
   end
 
-  @spec terminate(Params.RecentTracks.t(), Lilac.User.t()) ::
+  @spec terminate(Sync.Supervisor.action(), Lilac.User.t()) ::
           no_return
-  def terminate(params, user) do
+  def terminate(action, user) do
     # Give the client a chance to form the subscription
     Process.sleep(300)
 
     update(
       user.id,
-      if(is_nil(params.from), do: :sync, else: :update),
+      action,
       :inserting,
       %{total: 0, current: 0}
     )
 
     Sync.Supervisor.self_destruct(user)
+  end
+
+  @spec report_error(Params.RecentTracks.t(), Lilac.User.t(), struct) ::
+          no_return
+  def report_error(action, user, err) do
+    supernova_id =
+      case LilacWeb.ErrorReporter.handle_error(%{kind: "error", error_struct: err}) do
+        %{supernova_id: id} -> id
+        _ -> nil
+      end
+
+    update(
+      user.id,
+      action,
+      :terminated,
+      err |> Map.get(:message, "An unknown error occurred"),
+      supernova_id
+    )
   end
 end

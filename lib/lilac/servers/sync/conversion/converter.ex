@@ -20,6 +20,11 @@ defmodule Lilac.Sync.Converter do
     GenServer.cast(Registry.converter(user), {:persist_cache, action})
   end
 
+  @spec fetch_error(Sync.Supervisor.action(), Lilac.User.t(), struct) :: :ok
+  def fetch_error(action, user, error) do
+    GenServer.cast(Registry.converter(user), {:fetch_error, action, error})
+  end
+
   # Server callbacks
 
   def start_link(user) do
@@ -38,30 +43,21 @@ defmodule Lilac.Sync.Converter do
         }) ::
           {:reply, :ok, term}
   def handle_cast({:process_page, page, action}, %{user: user, converted_pages: converted_pages}) do
-    scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
+    try do
+      handle_page(user, page, action, converted_pages)
+    rescue
+      error ->
+        Sync.Subscriptions.report_error(action, user, error)
 
-    artist_map = convert_artists(user, scrobbles)
-    album_map = convert_albums(user, scrobbles, artist_map)
-    track_map = convert_tracks(user, scrobbles, artist_map, album_map)
+        Syncer.terminate_sync(user)
 
-    Conversion.Cache.add_scrobbles(user, scrobbles, artist_map, album_map, track_map)
-
-    if user.has_premium do
-      insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
+        {:noreply, %{user: user}}
     end
-
-    ProgressReporter.capture_progress(user, :fetching, length(scrobbles))
-
-    if converted_pages + 1 == page.meta.total_pages do
-      handle_last_page(user, action)
-    end
-
-    {:noreply, %{user: user, converted_pages: converted_pages + 1}}
   end
 
   @impl true
   @spec handle_cast({:persist_cache, Sync.Supervisor.action()}, %{user: Lilac.User.t()}) ::
-          {:reply, :ok, term}
+          {:noreply, term}
   def handle_cast({:persist_cache, action}, %{user: user, converted_pages: converted_pages}) do
     {artist_counts, album_counts, track_counts} = Conversion.Cache.get_counts(user)
 
@@ -73,6 +69,19 @@ defmodule Lilac.Sync.Converter do
     Syncer.terminate_sync(user)
 
     {:noreply, %{user: user, converted_pages: converted_pages}}
+  end
+
+  @impl true
+  @spec handle_cast({:fetch_error, Sync.Supervisor.action(), struct}, %{
+          user: Lilac.User.t()
+        }) ::
+          {:noreply, term}
+  def handle_cast({:fetch_error, action, error}, %{user: user}) do
+    Sync.Subscriptions.report_error(action, user, error)
+
+    Syncer.terminate_sync(user)
+
+    {:noreply, %{user: user}}
   end
 
   # Helpers
@@ -131,6 +140,30 @@ defmodule Lilac.Sync.Converter do
       end)
 
     Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
+  end
+
+  @spec handle_page(Lilac.User.t(), Responses.RecentTracks.t(), Sync.Supervisor.action(), integer) ::
+          {:noreply, map}
+  defp handle_page(user, page, action, converted_pages) do
+    scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
+
+    artist_map = convert_artists(user, scrobbles)
+    album_map = convert_albums(user, scrobbles, artist_map)
+    track_map = convert_tracks(user, scrobbles, artist_map, album_map)
+
+    Conversion.Cache.add_scrobbles(user, scrobbles, artist_map, album_map, track_map)
+
+    if user.has_premium do
+      insert_scrobbles(scrobbles, artist_map, album_map, track_map, user)
+    end
+
+    ProgressReporter.capture_progress(user, :fetching, length(scrobbles))
+
+    if converted_pages + 1 == page.meta.total_pages do
+      handle_last_page(user, action)
+    end
+
+    {:noreply, %{user: user, converted_pages: converted_pages + 1}}
   end
 
   @spec handle_last_page(Lilac.User.t(), Sync.Supervisor.action()) :: no_return()

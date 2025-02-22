@@ -161,10 +161,10 @@ defmodule Lilac.LastFM do
     end
   end
 
-  @spec handle_unknown_track(binary, binary) :: %{track: binary, album: binary} | nil
+  @spec handle_unknown_track(binary, binary) :: %{name: binary, album: binary} | nil
   def handle_unknown_track(artist_name, track_name) do
     case track_info(%Params.TrackInfo{artist: artist_name, track: track_name}) do
-      {:ok, response} -> %{track: response.name, album: response.album}
+      {:ok, response} -> %{name: response.name, album: response.album}
       {:error, %{error_code: 6}} -> nil
     end
   end

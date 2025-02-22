@@ -7,6 +7,7 @@ defmodule Lilac.Sync.Fetcher do
   alias Lilac.LastFM.API.Params
   alias Lilac.LastFM.Responses
 
+  @spec start_link(Lilac.User.t()) :: {:ok, pid} | {:error, term}
   def start_link(user) do
     GenServer.start_link(__MODULE__, user, name: Registry.fetcher(user))
   end
@@ -31,6 +32,7 @@ defmodule Lilac.Sync.Fetcher do
   ## Server callbacks
 
   @impl true
+  @spec handle_cast(:sync, %{user: Lilac.User.t()}) :: {:noreply, map}
   def handle_cast(:sync, state) do
     Sync.Dataset.clear(state.user)
 
@@ -50,6 +52,7 @@ defmodule Lilac.Sync.Fetcher do
   end
 
   @impl true
+  @spec handle_cast(:update, %{user: Lilac.User.t()}) :: {:noreply, map}
   def handle_cast(:update, state) do
     unless state.user.last_synced == nil do
       params = %Params.RecentTracks{
@@ -74,19 +77,19 @@ defmodule Lilac.Sync.Fetcher do
   end
 
   @spec initial_fetch(
-          %Lilac.User{},
-          %Params.RecentTracks{},
+          Lilac.User.t(),
+          Params.RecentTracks.t(),
           Lilac.Sync.Supervisor.action(),
           integer
         ) :: integer()
   defp initial_fetch(user, params, action, start_page \\ 1) do
     case fetch_page(user, %{params | page: start_page}) do
-      {:error, _error} ->
-        Sync.Subscriptions.terminate(params, user)
+      {:error, error} ->
+        Sync.Subscriptions.report_error(action, user, error)
         0
 
       {:ok, %Responses.RecentTracks{meta: %Responses.RecentTracks.Meta{total_pages: 0}}} ->
-        Sync.Subscriptions.terminate(params, user)
+        Sync.Subscriptions.terminate(action, user)
         0
 
       {:ok, page} ->
@@ -94,6 +97,12 @@ defmodule Lilac.Sync.Fetcher do
     end
   end
 
+  @spec continue_fetching(
+          Lilac.User.t(),
+          Lilac.Sync.Supervisor.action(),
+          %Responses.RecentTracks{},
+          %Params.RecentTracks{}
+        ) :: integer()
   defp continue_fetching(user, action, page, params) do
     Sync.Supervisor.spin_up_servers(user, action)
 
@@ -115,6 +124,12 @@ defmodule Lilac.Sync.Fetcher do
     total_pages
   end
 
+  @spec fetch_all_pages(
+          Lilac.User.t(),
+          Params.RecentTracks.t(),
+          integer,
+          Lilac.Sync.Supervisor.action()
+        ) :: no_return()
   defp fetch_all_pages(user, params, total_pages, action) do
     Lilac.Parallel.map(
       1..total_pages,
@@ -132,7 +147,10 @@ defmodule Lilac.Sync.Fetcher do
             )
 
           {:error, error} ->
-            IO.puts("An error occurred while syncing: #{inspect(error)}")
+            # Because this is being processed in parallel, we need to report the error
+            # as a message to the converting server. This way, race conditions are avoided,
+            # and the error is handled in the correct order.
+            Sync.Converter.fetch_error(action, user, error)
         end
       end,
       size: 5
