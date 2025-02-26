@@ -1,4 +1,4 @@
-# Lilac
+<img src="Lilac Banner.png" alt="Lilac" width="500"/>
 
 _너도 언젠가 날 잊게 될까?_
 
@@ -27,4 +27,4 @@ Lilac syncing leverages Elixir's OTP integration to dynamically spin up new inde
 
 Somethings broken? Just curious how something works?
 
-Feel free to shoot me a Discord dm at @mahjogn or join the support server! https://discord.gg/9Vr7Df7TZf
+Feel free to shoot me a Discord dm at @abbyfour or join the support server! https://discord.gg/9Vr7Df7TZf

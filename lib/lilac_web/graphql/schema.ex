@@ -11,6 +11,10 @@ defmodule LilacWeb.Schema do
       resolve(&Resolvers.Misc.ping/3)
     end
 
+    field :version, :string do
+      resolve(&Resolvers.Misc.version/3)
+    end
+
     # Users
     field :users, non_null(list_of(non_null(:user))) do
       arg(:filters, :user_input)
