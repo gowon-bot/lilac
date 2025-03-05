@@ -69,7 +69,10 @@ defmodule LilacWeb.ErrorReporter do
     |> Enum.join(",\n")
   end
 
-  defp format_entry({module, function, arity, [file: file, line: line]}) do
+  defp format_entry({module, function, arity, info}) do
+    file = Keyword.get(info, :file, "unknown")
+    line = Keyword.get(info, :line, 0)
+
     """
     {#{inspect(module)}, :#{function}, #{arity},
      [file: ~c"#{file}", line: #{line}]}

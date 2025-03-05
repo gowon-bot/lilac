@@ -221,8 +221,8 @@ defmodule LilacWeb.Schema.Types do
     field(:artist, :artist)
 
     field(:rank, non_null(:integer))
-    field(:first_scrobbled, non_null(:date))
-    field(:last_scrobbled, non_null(:date))
+    field(:first_scrobbled, :date)
+    field(:last_scrobbled, :date)
     field(:total_listeners, non_null(:integer))
   end
 

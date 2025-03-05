@@ -6,6 +6,7 @@ defmodule Lilac.Services.WhoFirst do
 
   alias Lilac.Services.WhoKnows
   alias Lilac.WhoFirst.WhoFirstArtistRank
+  alias Lilac.Helpers
 
   @spec who_first_artist(Lilac.Artist.t(), Lilac.WhoKnows.Input.t()) :: WhoFirstArtistResponse.t()
   def who_first_artist(artist, settings) do
@@ -45,6 +46,7 @@ defmodule Lilac.Services.WhoFirst do
           where: ac.user_id == ^user.id
         )
         |> Lilac.Repo.one()
+        |> Helpers.Map.ensure_map()
 
       count =
         from(ac in Lilac.ArtistCount,
@@ -58,7 +60,7 @@ defmodule Lilac.Services.WhoFirst do
 
       %WhoFirstArtistRank{
         artist: artist,
-        rank: user_entry.rank,
+        rank: Map.get(user_entry, :rank, 0),
         first_scrobbled: Map.get(user_entry, :first_scrobbled),
         last_scrobbled: Map.get(user_entry, :last_scrobbled),
         total_listeners: count
