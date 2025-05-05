@@ -80,4 +80,28 @@ defmodule Lilac.InputParser.Artist do
       query |> where([artist: a], a.name in ^input_names)
     end
   end
+
+  @spec maybe_artist_input_for_rym(Query.t(), Artist.Input.t()) :: Query.t()
+  def maybe_artist_input_for_rym(query, input) do
+    if is_nil(input) do
+      query
+    else
+      query
+      |> maybe_name_for_rym(input)
+    end
+  end
+
+  @spec maybe_name_for_rym(Query.t(), Artist.Input.t()) :: Query.t()
+  defp maybe_name_for_rym(query, input) do
+    if InputParser.value_not_nil(input, :name) do
+      query
+      |> where(
+        [rate_your_music_album: rl],
+        ilike(rl.artist_name, ^InputParser.escape_like(input.name)) or
+          ilike(rl.artist_native_name, ^InputParser.escape_like(input.name))
+      )
+    else
+      query
+    end
+  end
 end

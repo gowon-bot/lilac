@@ -24,7 +24,17 @@ defmodule Lilac.InputParser.Rating do
         from(l in AlbumAlbum, as: :album_album, where: l.album_id in subquery(album_subquery))
         |> select([l], l.rate_your_music_album_id)
 
-      where(query, [rate_your_music_album: l], l.id in subquery(album_album_subquery))
+      rym_album_subquery =
+        from(rl in Lilac.RYM.Album, as: :rate_your_music_album)
+        |> InputParser.Album.maybe_album_input_for_rym(album)
+        |> select([l], l.id)
+
+      where(
+        query,
+        [rate_your_music_album: l],
+        l.id in subquery(album_album_subquery) or
+          l.id in subquery(rym_album_subquery)
+      )
     else
       query
     end

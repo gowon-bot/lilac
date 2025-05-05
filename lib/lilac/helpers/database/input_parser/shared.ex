@@ -26,4 +26,11 @@ defmodule Lilac.InputParser do
   def value_not_nil(map, key) do
     !is_nil(Map.get(map, key))
   end
+
+  @spec escape_like(String.t()) :: String.t()
+  def escape_like(string) do
+    string
+    |> String.replace("%", "\\%")
+    |> String.replace("_", "\\_")
+  end
 end
