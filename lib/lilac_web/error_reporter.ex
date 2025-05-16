@@ -55,7 +55,10 @@ defmodule LilacWeb.ErrorReporter do
 
     case response do
       {:ok, %{body: %{"error" => supernova_error}}} ->
-        %{error: error.message, supernova_id: supernova_error["id"]}
+        %{
+          error: Map.get(error, :message, "An unknown error occurred"),
+          supernova_id: supernova_error["id"]
+        }
 
       _ ->
         IO.inspect(response)
