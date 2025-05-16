@@ -163,7 +163,7 @@ defmodule Lilac.Sync.Fetcher do
     case Lilac.LastFM.recent_tracks(params) do
       {:error, _} when retries <= 3 ->
         # Exponential backoff
-        Process.sleep(:math.pow(2, retries) * 2000)
+        Process.sleep(retries * retries * 2000)
         fetch_page(user, params, retries + 1)
 
       response ->
