@@ -6,12 +6,14 @@ defmodule Lilac.Services.GuildMembers do
 
   @spec add(binary, binary) :: GuildMember.t() | nil
   def add(discord_id, guild_id) do
-    user = Lilac.Repo.get_by!(User, %{discord_id: discord_id})
+    user = Lilac.Repo.get_by(User, %{discord_id: discord_id})
 
-    case %Lilac.GuildMember{guild_id: guild_id, user: user}
-         |> Lilac.Repo.insert(returning: true, on_conflict: :nothing) do
-      {:err, _} -> nil
-      {:ok, guild_member} -> guild_member
+    if user != nil do
+      case %Lilac.GuildMember{guild_id: guild_id, user: user}
+           |> Lilac.Repo.insert(returning: true, on_conflict: :nothing) do
+        {:err, _} -> nil
+        {:ok, guild_member} -> guild_member
+      end
     end
   end
 
