@@ -12,8 +12,8 @@ defmodule Lilac.Ratings.Parse do
 
   # Since we're generating all possible combinations of artists and titles
   # we need to limit the number of albums we generate to avoid combinatorial explosion
-  @max_combinatorical_input 3
-  @max_permutations_count 10
+  @max_combinatorical_input 5
+  @max_permutations_count 1000
 
   # Define headers
   @headers %{
@@ -154,11 +154,10 @@ defmodule Lilac.Ratings.Parse do
   @spec generate_permutations([String.t()], [String.t()]) :: [{[String.t()], String.t()}]
   defp generate_permutations(artists, titles) do
     # Limit the number of artists we generate combinations for to avoid combinatorial explosion
-    limited_artists = Enum.take(artists, @max_combinatorical_input)
-    artist_count = length(limited_artists)
+    artist_count = min(length(artists), @max_combinatorical_input)
 
     Enum.flat_map(1..artist_count, fn n ->
-      Lilac.Permutations.permutations(limited_artists, n)
+      Lilac.Permutations.permutations(artists, n)
     end)
     |> Enum.uniq()
     |> create_artist_title_combos(titles)
