@@ -34,7 +34,7 @@ defmodule Lilac.Sync.Converter do
   @impl true
   @spec init(Lilac.User.t()) :: {:ok, map}
   def init(user) do
-    {:ok, %{user: user, converted_pages: 0}}
+    {:ok, %{user: user, converted_pages: 0, queued_pages: 0}}
   end
 
   @impl true
@@ -42,9 +42,13 @@ defmodule Lilac.Sync.Converter do
           user: Lilac.User.t()
         }) ::
           {:reply, :ok, term}
-  def handle_cast({:process_page, page, action}, %{user: user, converted_pages: converted_pages}) do
+  def handle_cast({:process_page, page, action}, %{
+        user: user,
+        converted_pages: converted_pages,
+        queued_pages: queued_pages
+      }) do
     try do
-      handle_page(user, page, action, converted_pages)
+      handle_page(user, page, action, converted_pages, queued_pages)
     rescue
       error ->
         Sync.Subscriptions.report_error(action, user, error)
@@ -142,9 +146,15 @@ defmodule Lilac.Sync.Converter do
     Lilac.Repo.insert_all(Lilac.Scrobble, converted_scrobbles)
   end
 
-  @spec handle_page(Lilac.User.t(), Responses.RecentTracks.t(), Sync.Supervisor.action(), integer) ::
+  @spec handle_page(
+          Lilac.User.t(),
+          Responses.RecentTracks.t(),
+          Sync.Supervisor.action(),
+          integer,
+          integer
+        ) ::
           {:noreply, map}
-  defp handle_page(user, page, action, converted_pages) do
+  defp handle_page(user, page, action, converted_pages, queued_pages) do
     scrobbles = page.tracks |> Enum.filter(&(not &1.is_now_playing))
 
     artist_map = convert_artists(user, scrobbles)
@@ -163,7 +173,8 @@ defmodule Lilac.Sync.Converter do
       handle_last_page(user, action)
     end
 
-    {:noreply, %{user: user, converted_pages: converted_pages + 1}}
+    {:noreply,
+     %{user: user, converted_pages: converted_pages + 1, queued_pages: queued_pages - 1}}
   end
 
   @spec handle_last_page(Lilac.User.t(), Sync.Supervisor.action()) :: no_return()
